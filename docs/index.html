@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,157 +247,116 @@ const UPCOMING_BANNERS = [
 // Based on Prydwen, Game8, FRVR, Beebom consensus
 const TIER_LIST = [
   {
-    tier: "SS", label: "Broken — Must Pull",
-    color: "#ff3030", bg: "rgba(255,40,40,0.08)", border: "rgba(255,60,60,0.35)",
+    tier: "SS", label: "SS — Game-Breaking",
+    color: "#ff2020", bg: "rgba(255,30,30,0.08)", border: "rgba(255,50,50,0.35)",
     characters: [
-      { id:"phainon",    name:"Phainon",    element:"Physical",  path:"Remembrance", rarity:5, role:"DPS",    image:null, customIcon:"phainon",  note:"Strongest DPS. Ultimate form is nearly indestructible." },
-      { id:"castorice",  name:"Castorice",  element:"Quantum",   path:"Remembrance", rarity:5, role:"Sub-DPS", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1402.webp",  note:"Broken global passive + AoE. Dominates Pure Fiction." },
-      { id:"robin",      name:"Robin",      element:"Physical",  path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"robin",  note:"Universal support. Buffs every action, zero downsides." },
-      { id:"tribbie",    name:"Tribbie",    element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1401.webp",  note:"Sub-DPS masquerading as support. Rivals Robin in quantum comps." },
-      { id:"hyacine",    name:"Hyacine",    element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1403.webp",  note:"Best healer in the game right now." },
-      { id:"ruan_mei",   name:"Ruan Mei",   element:"Ice",       path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"ruan_mei",  note:"Meta-defining break support. Fits almost every team." },
+      { id:"phainon",          name:"Phainon",          element:"Physical",  path:"Remembrance", rarity:5, role:"DPS",     image:null, customIcon:"phainon",         note:"Powerful DPS during Enhanced State with high survivability. Can dispel debuffs on his own." },
+      { id:"castorice",        name:"Castorice",        element:"Quantum",   path:"Remembrance", rarity:5, role:"DPS",     image:"https://api.hakush.in/hsr/UI/avatarshopicon/1402.webp", note:"Powerful AoE DMG, SP Neutral with Revive Global Passive. F2P-friendly teams." },
+      { id:"anaxa",            name:"Anaxa",            element:"Wind",      path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"anaxa",           note:"Can implant missing weaknesses. Great single-target and AoE skill with Crowd Control." },
+      { id:"the_herta",        name:"The Herta",        element:"Ice",       path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"the_herta",       note:"Powerful AoE DMG, can hold her own in single-target. F2P-friendly teams." },
+      { id:"sunday",           name:"Sunday",           element:"Imaginary", path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"sunday",          note:"Turn advance + energy restore for single unit. Powerful CRIT buffs. SP-Neutral with Ult." },
+      { id:"tribbie",          name:"Tribbie",          element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1401.webp", note:"Party-wide All-Type RES PEN + supplemental Follow-up DMG. Great for AoE or Dual DPS." },
+      { id:"evernight",        name:"Evernight",        element:"Ice",       path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"evernight",       note:"High Memosprite DMG. Buffs Memosprite CRIT DMG. Works standalone or paired with Castorice." },
+      { id:"hyacine",          name:"Hyacine",          element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1403.webp", note:"Powerful healing, increases party Max HP, deals damage through Little Ica. High innate SPD." },
+      { id:"permansor_terrae", name:"Permansor Terrae", element:"Physical",  path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"permansor_terrae",note:"Stacking shields for sustain. Grants allies Souldragon summon for extra DMG. Boosts Bondmate ATK." },
+      { id:"huohuo",           name:"Huohuo",           element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1217.webp", note:"Great healing with off-turn cleanse. Party-wide energy restoration and ATK buffs." },
+      { id:"feixiao",          name:"Feixiao",          element:"Wind",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"feixiao",         note:"Powerful single-target DMG. Ultimate ignores enemy weaknesses. F2P-friendly teams." },
     ]
   },
   {
-    tier: "SS+", label: "Excellent — Top Tier",
-    color: "#ff7020", bg: "rgba(255,110,30,0.07)", border: "rgba(255,110,30,0.3)",
+    tier: "S+", label: "S+ — Excellent",
+    color: "#ff6010", bg: "rgba(255,100,20,0.07)", border: "rgba(255,100,20,0.3)",
     characters: [
-      { id:"feixiao",    name:"Feixiao",    element:"Wind",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"feixiao",  note:"Gold standard boss killer. Best with Robin+Aventurine." },
-      { id:"acheron",    name:"Acheron",    element:"Lightning", path:"Nihility",    rarity:5, role:"DPS",     image:null, customIcon:"acheron",  note:"Dominant burst DPS. Punishes debuffs heavily." },
-      { id:"firefly",    name:"Firefly",    element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"firefly",  note:"Super Break queen. Dominates if enemy has Fire weakness." },
-      { id:"aventurine", name:"Aventurine", element:"Imaginary", path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"aventurine",  note:"Best tank for follow-up teams. Deals damage while shielding." },
-      { id:"aglaea",     name:"Aglaea",     element:"Lightning", path:"Remembrance", rarity:5, role:"DPS",     image:"https://api.hakush.in/hsr/UI/avatarshopicon/1405.webp",  note:"Strong new DPS with excellent team synergy." },
-      { id:"sunday",     name:"Sunday",     element:"Imaginary", path:"Harmony",     rarity:5, role:"Support",image:null, customIcon:"sunday",  note:"Best support for Jing Yuan & summon characters." },
-      { id:"cerydra",    name:"Cerydra",    element:"Ice",       path:"Remembrance", rarity:5, role:"DPS",     image:null, customIcon:"cerydra", note:"New Remembrance DPS, excels with TB (Ice) pairing." },
-      { id:"trailblazer_ice", name:"TB (Ice)", element:"Ice",   path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"trailblazer_ice", note:"Summons Mem to shield and buff; strong Remembrance enabler." },
-    
-      { id:"the_herta",  name:"The Herta",  element:"Ice",       path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"the_herta",  note:"Ice Erudition powerhouse. Transforms Herta into S-tier damage." },
-    
-      { id:"mydei",      name:"Mydei",      element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"mydei",      note:"HP-scaling Fire DPS with massive burst potential." },
+      { id:"cyrene",           name:"Cyrene",           element:"Ice",       path:"The Hunt",    rarity:5, role:"Support", image:null, customIcon:"cyrene",          note:"Party-wide True DMG buff. Enhances Chrysos Heir characters. Cleanses debuffs with Ult." },
+      { id:"robin",            name:"Robin",            element:"Physical",  path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"robin",           note:"Party-wide turn advance with Ult. ATK and CRIT DMG buff. SP friendly." },
+      { id:"ruan_mei",         name:"Ruan Mei",         element:"Ice",       path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"ruan_mei",        note:"Best support for Break DMG teams. Party-wide SPD and All-Type RES PEN buff." },
+      { id:"acheron",          name:"Acheron",          element:"Lightning", path:"Nihility",    rarity:5, role:"DPS",     image:null, customIcon:"acheron",         note:"Powerful in single-target and AoE. Has innate self-buffs. Ult ignores weaknesses." },
+      { id:"mydei",            name:"Mydei",            element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"mydei",           note:"High AoE Skill DMG, very tanky. Gets tons of CRIT Rate from high HP." },
+      { id:"archer",           name:"Archer (EMIYA)",   element:"Quantum",   path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"archer",          note:"Skill deals massive DMG and Toughness DMG. One of highest Ult multipliers in game." },
+      { id:"firefly",          name:"Firefly",          element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"firefly",         note:"Powerful Break DMG, can implant Fire Weakness. Quite tanky for a DPS." },
+      { id:"cipher",           name:"Cipher",           element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"cipher",          note:"Very fast Follow-up attacker. Powerful Ult DMG when Tally is high. Permanent Vulnerability debuff." },
+      { id:"cerydra",          name:"Cerydra",          element:"Ice",       path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"cerydra",         note:"Buffs Skill DMG, allows DPS to use Skill twice. Easy to build with innate ATK and SPD buffs." },
+      { id:"the_dhalia",       name:"The Dhalia",       element:"Fire",      path:"Abundance",   rarity:5, role:"Support", image:null, customIcon:"the_dhalia",      note:"Enables Super Break DMG outside of Weakness Break. Can implant Weakness based on DPS." },
+      { id:"yunli",            name:"Yunli",            element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"yunli",           note:"Powerful across all Endgame content. Strong in single-target and AoE. Ult triggers even without enemy attack." },
+      { id:"sparkle",          name:"Sparkle",          element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"sparkle",         note:"Lots of Skill Points with Ult. Turn advance to single unit. DMG and CRIT DMG buffs." },
+      { id:"bronya",           name:"Bronya",           element:"Wind",      path:"Harmony",     rarity:5, role:"Support", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1101.webp", note:"Turn advance to single unit. Party-wide ATK and CRIT DMG buff. SP heavy." },
+      { id:"saber",            name:"Saber (Artoria)",  element:"Wind",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"saber",           note:"Innate CRIT stats, great in single-target and AoE. High Toughness DMG with Ult." },
+      { id:"trailblazer_ice",  name:"TB (Ice)",         element:"Ice",       path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"trailblazer_ice", note:"Party-wide CRIT DMG buff. Turn advance and True DMG buffs to single unit." },
+      { id:"rappa",            name:"Rappa",            element:"Imaginary", path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"rappa",           note:"Powerful across all Endgame with Imaginary weakness. Strong single-target and especially AoE." },
+      { id:"fugue",            name:"Fugue",            element:"Fire",      path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"fugue",           note:"Excellent support for Break teams. Helps ally ignore weaknesses. DEF shred on multiple enemies." },
+      { id:"hysilens",         name:"Hysilens",         element:"Physical",  path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"hysilens",        note:"Powerful DoT especially when Zone is up. DEF and Vulnerability debuffs. Restores SP with Ult." },
+      { id:"aventurine",       name:"Aventurine",       element:"Imaginary", path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"aventurine",      note:"Strongest shield in the game. Party-wide Effect RES buff. SP friendly." },
+      { id:"lingsha",          name:"Lingsha",          element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"lingsha",         note:"Great frequent healing. Follow-up cleanses allies off-turn. Ult increases Break DMG received." },
+      { id:"aglaea",           name:"Aglaea",           element:"Lightning", path:"Remembrance", rarity:5, role:"DPS",     image:"https://api.hakush.in/hsr/UI/avatarshopicon/1405.webp", note:"High innate SPD for lots of turns. Very SP friendly. Needs E1 and Sunday for Energy." },
+      { id:"kafka",            name:"Kafka",            element:"Lightning", path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"kafka",           note:"Deals DMG through DoTs. Doesn't need CRIT stats. Heavily relies on party DoTs." },
+      { id:"jade",             name:"Jade",             element:"Quantum",   path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"jade",            note:"Great AoE DMG with off-turn Follow-ups. SP friendly. Made for Pure Fiction." },
+      { id:"gallagher",        name:"Gallagher",        element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"gallagher",       note:"Very SP friendly. Besotted debuff heals allies and increases Break DMG. Great in Break teams." },
     ]
   },
   {
-    tier: "S", label: "Strong — Meta Pick",
+    tier: "S", label: "S — Strong Meta Pick",
     color: "#ffd020", bg: "rgba(255,200,20,0.06)", border: "rgba(255,200,20,0.28)",
     characters: [
-      { id:"boothill",   name:"Boothill",   element:"Fire",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"boothill",  note:"King of single-target break. Great with Ruan Mei." },
-      { id:"kafka",      name:"Kafka",       element:"Lightning", path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"kafka",  note:"DoT core — needs Hysilens or Black Swan to shine." },
-      { id:"black_swan", name:"Black Swan",  element:"Wind",      path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"black_swan",  note:"DoT amplifier with massive debuff stacking." },
-      { id:"jiaoqiu",    name:"Jiaoqiu",     element:"Fire",      path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"jiaoqiu",  note:"Essential Acheron partner. Huge vulnerability debuffer." },
-      { id:"fu_xuan",    name:"Fu Xuan",     element:"Quantum",   path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"fu_xuan",  note:"Best non-sustain tank; crit buff + damage redirect." },
-      { id:"jade",       name:"Jade",        element:"Quantum",   path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"jade",  note:"Strong in follow-up teams; scales with team attacks." },
-      { id:"huohuo",     name:"Huohuo",      element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1217.webp",  note:"Energy refund healer; excellent in aggressive teams." },
-      { id:"jing_yuan",  name:"Jing Yuan",   element:"Lightning", path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"jing_yuan",  note:"Strong with Sunday. Lightning Lord hits hard." },
-    
-      { id:"sparkle",  name:"Sparkle",   element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"sparkle",  note:"Exceptional quantum support; SP positive and strong crit buffs." },
-    
-      { id:"fugue",      name:"Fugue",      element:"Fire",      path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"fugue",      note:"Super Break support. Essential for Firefly/Boothill teams." },
-    
-      { id:"rappa",      name:"Rappa",      element:"Imaginary", path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"rappa",      note:"Imaginary break DPS with amazing toughness damage AoE." },
-    
-      { id:"lingsha",    name:"Lingsha",    element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"lingsha",    note:"Best healer for break teams. Wind DoT + cleanse + break buffs." },
-    
-      { id:"anaxa",      name:"Anaxa",      element:"Wind",      path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"anaxa",      note:"New Wind Erudition DPS with strong follow-up synergy." },
-    
-      { id:"cyrene",           name:"Cyrene",           element:"Ice",  path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"cyrene",           note:"Physical Hunt DPS — strong single-target and follow-up." },
-    
-      { id:"hysilens",         name:"Hysilens",         element:"Physical", path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"hysilens",         note:"Top-tier healer in DoT teams. Great with Kafka/Black Swan." },
-    
-      { id:"archer",           name:"Archer (EMIYA)",   element:"Quantum",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"archer",           note:"Fate collab — Fire Hunt DPS with powerful follow-up kit." },
-    
-      { id:"saber",            name:"Saber (Artoria)",  element:"Wind",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"saber",            note:"Fate collab — Wind Destruction DPS with strong burst damage." },
+      { id:"jingliu",          name:"Jingliu",          element:"Ice",       path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"jingliu",         note:"Innate CRIT Rate, great Blast DMG, SP Neutral. Low DMG outside Enhanced state." },
+      { id:"blade",            name:"Blade",            element:"Wind",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"blade",           note:"Self-sustaining AoE DMG dealer. SP efficient. Does not benefit from ATK buffs." },
+      { id:"boothill",         name:"Boothill",         element:"Fire",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"boothill",        note:"Powerful single-target DMG. Ult implants Physical Weakness and delays enemy turns." },
+      { id:"silver_wolf",      name:"Silver Wolf",      element:"Quantum",   path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"silver_wolf",     note:"Can implant a missing Weakness. Inflicts lots of debuffs simply by attacking." },
+      { id:"tingyun",          name:"Tingyun",          element:"Lightning", path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"tingyun",         note:"Energy restoration + party-wide ATK and CRIT DMG buff. SP friendly." },
+      { id:"jing_yuan",        name:"Jing Yuan",        element:"Lightning", path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"jing_yuan",       note:"Strong AoE DMG. DPS is slow without Sunday. Needs Sunday to fix weaknesses." },
+      { id:"topaz",            name:"Topaz",            element:"Fire",      path:"The Hunt",    rarity:5, role:"Sub-DPS", image:null, customIcon:"topaz",           note:"Great support for Follow-up teams. SP friendly. High Toughness DMG when Ult is up." },
+      { id:"jiaoqiu",          name:"Jiaoqiu",          element:"Fire",      path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"jiaoqiu",         note:"Inflicts Vulnerability debuffs. Increases Ult DMG. Only best used with Acheron." },
+      { id:"fu_xuan",          name:"Fu Xuan",          element:"Quantum",   path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"fu_xuan",         note:"Party-wide DMG mitigation + CC resist. CRIT Rate and HP buff for the party." },
+      { id:"pela",             name:"Pela",             element:"Ice",       path:"Nihility",    rarity:4, role:"Support", image:null, customIcon:"pela",            note:"AoE DEF shred with Ult. Can dispel enemy buff with Skill. SP friendly." },
+      { id:"black_swan",       name:"Black Swan",       element:"Wind",      path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"black_swan",      note:"Great DoT damage. Can decrease enemy DEF and ignore DEF on her DoT." },
+      { id:"luocha",           name:"Luocha",           element:"Imaginary", path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"luocha",          note:"Excellent healing. Removes enemy buffs with Ult. Immune to Crowd Control. SP friendly." },
+      { id:"trailblazer_harmony", name:"TB (Harmony)",  element:"Imaginary", path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"trailblazer_harmony", note:"Break Effect and Super Break DMG buffs to all allies. High Toughness DMG with Skill." },
+      { id:"march7th_hunt",    name:"March 7th (Hunt)", element:"Imaginary", path:"The Hunt",    rarity:4, role:"Sub-DPS", image:null, customIcon:"march7th_hunt",   note:"High single-target DMG. Can be built as CRIT or Break DPS. Provides offensive buffs." },
+      { id:"moze",             name:"Moze",             element:"Lightning", path:"The Hunt",    rarity:4, role:"Sub-DPS", image:null, customIcon:"moze",            note:"High single-target and Toughness DMG. Fits any FuA team and is SP neutral." },
     ]
   },
   {
-    tier: "S-", label: "Good — Solid Choice",
-    color: "#60d060", bg: "rgba(80,200,80,0.06)", border: "rgba(80,200,80,0.25)",
-    characters: [
-      { id:"jingliu",    name:"Jingliu",     element:"Ice",       path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"jingliu",  note:"Ice powerhouse; HP drain mechanic limits team flexibility." },
-      { id:"blade",      name:"Blade",       element:"Wind",      path:"Destruction", rarity:5, role:"DPS",    image:null, customIcon:"blade",  note:"Great with Castorice as Sub-DPS; self-sustaining." },
-      { id:"topaz",      name:"Topaz",       element:"Fire",      path:"The Hunt",    rarity:5, role:"Sub-DPS", image:null, customIcon:"topaz",  note:"Essential for Feixiao teams; Numby follow-up is reliable." },
-      { id:"bronya",     name:"Bronya",      element:"Wind",      path:"Harmony",     rarity:5, role:"Support", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1101.webp",  note:"Premium single-target buffer; great with hyper-carry DPS." },
-      { id:"silver_wolf",name:"Silver Wolf", element:"Quantum",   path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"silver_wolf",  note:"Weakness implant is incredible for mono-element teams." },
-      { id:"luocha",     name:"Luocha",      element:"Imaginary", path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"luocha",  note:"Passive cleanse field; flexible healer for aggressive teams." },
-      { id:"dr_ratio",   name:"Dr. Ratio",   element:"Imaginary", path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"dr_ratio",  note:"Strong F2P-friendly DPS; follow-up hits hard with debuffs." },
-      { id:"yunli",      name:"Yunli",       element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"yunli",  note:"Counter-attack DPS with Clara vibes but stronger burst." },
-    
-      { id:"imbibitor_lunae", name:"IL (Dan Heng)", element:"Imaginary", path:"Destruction", rarity:5, role:"DPS",    image:null, customIcon:"imbibitor_lunae", note:"Once S-tier hyper carry; still strong but SP heavy." },
-    
-      { id:"moze",       name:"Moze",       element:"Lightning", path:"The Hunt",    rarity:4, role:"Sub-DPS", image:null, customIcon:"moze",       note:"Prey mark follow-up; nearly essential in Feixiao teams." },
-    
-      { id:"march7th_hunt", name:"March 7th (Hunt)", element:"Imaginary", path:"The Hunt", rarity:4, role:"Sub-DPS", image:null, customIcon:"march7th_hunt", note:"Hunt-path March 7th is a top-tier follow-up Sub-DPS." },
-    
-      { id:"yao_guang",        name:"Yao Guang",        element:"Physical",       path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"yao_guang",        note:"Ice Nihility support; great pairing with Acheron or DoT teams." },
-    
-      { id:"the_dhalia",       name:"The Dhalia",       element:"Fire",      path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"the_dhalia",       note:"Wind healer — strong synergy with DoT and Nihility teams." },
-    
-      { id:"cipher",           name:"Cipher",           element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"cipher",           note:"Quantum Harmony support enabling quantum carry teams." },
-    ]
-  },
-  {
-    tier: "A", label: "Decent — Situational",
+    tier: "A", label: "A — Decent / Situational",
     color: "#50b0ff", bg: "rgba(50,140,255,0.05)", border: "rgba(50,140,255,0.22)",
     characters: [
-      { id:"seele",      name:"Seele",       element:"Quantum",   path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"seele",  note:"Once queen; modern HP pools reduce Resurgence value." },
-      { id:"gepard",     name:"Gepard",      element:"Ice",       path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"gepard",  note:"F2P reliable tank; team shield ult still strong." },
-      { id:"argenti",    name:"Argenti",     element:"Physical",  path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"argenti",  note:"AoE powerhouse; good in Pure Fiction with SP." },
-      { id:"gallagher",  name:"Gallagher",   element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"gallagher",  note:"Best F2P healer for break teams; essential with Firefly." },
-      { id:"himeko",     name:"Himeko",      element:"Fire",      path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"himeko",  note:"Pure Fiction specialist; weaker in MoC." },
-      { id:"pela",       name:"Pela",        element:"Ice",       path:"Nihility",    rarity:4, role:"Support", image:null, customIcon:"pela",  note:"Free DEF shredder; great budget support." },
-      { id:"tingyun",    name:"Tingyun",     element:"Lightning", path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"tingyun",  note:"Solid energy refund support; still viable but outclassed." },
-      { id:"sampo",      name:"Sampo",       element:"Wind",      path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"sampo",   note:"Wind DoT spreader; useful in Kafka/Black Swan teams." },
-      { id:"lynx",       name:"Lynx",        element:"Quantum",   path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"lynx",    note:"F2P sustain; replaces Natasha/Bailu for survival teams." },
-    
-      { id:"trailblazer_fire", name:"TB (Fire)", element:"Fire", path:"Preservation", rarity:5, role:"Tank", image:null, customIcon:"trailblazer_fire", note:"Fire TB tank with taunt; useful in fire break comps." },
-    
-      { id:"hanya",    name:"Hanya",     element:"Physical",  path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"hanya",     note:"F2P speed buffer; solid budget alternative to Bronya." },
-    
-      { id:"trailblazer_remembrance", name:"TB (Rem.)", element:"Ice", path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"trailblazer_remembrance", note:"Remembrance TB — essential for Cerydra & Aglaea teams." },
-    
-      { id:"permansor_terrae", name:"Permansor Terrae", element:"Physical",      path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"permansor_terrae", note:"Fire break tank — good in Firefly and break comps." },
-    
-      { id:"evernight",        name:"Evernight",        element:"Ice",   path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"evernight",        note:"Quantum debuffer for Nihility teams; solid but situational." },
-    
-      { id:"sparxie",          name:"Sparxie",          element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"sparxie",          note:"4-star Fire healer; decent break support for fire teams." },
+      { id:"dr_ratio",         name:"Dr. Ratio",        element:"Imaginary", path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"dr_ratio",        note:"Innate CRIT stats from Talent. Strong single-target Follow-up DMG. SP heavy." },
+      { id:"seele",            name:"Seele",            element:"Quantum",   path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"seele",           note:"Amazing single-target DMG with bonus turns on kill. SP hungry, struggles vs multiple enemies." },
+      { id:"imbibitor_lunae",  name:"IL (Dan Heng)",    element:"Imaginary", path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"imbibitor_lunae", note:"High Blast DMG when fully charged. Very SP heavy. Needs Sparkle to play comfortably." },
+      { id:"himeko",           name:"Himeko",           element:"Fire",      path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"himeko",          note:"Great AoE damage through Weakness Break. Struggles in single target." },
+      { id:"argenti",          name:"Argenti",          element:"Physical",  path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"argenti",         note:"High AoE DMG with lots of CRIT Rate from Talent. High energy cost Ultimate." },
+      { id:"clara",            name:"Clara",            element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"clara",           note:"Counter-attack DPS with good survivability. DMG depends on enemy aggro." },
+      { id:"asta",             name:"Asta",             element:"Fire",      path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"asta",            note:"Buffs SPD and ATK of the team. Good Toughness DMG on single enemies." },
+      { id:"gepard",           name:"Gepard",           element:"Ice",       path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"gepard",          note:"F2P reliable tank with team-wide shield Ultimate." },
+      { id:"hanya",            name:"Hanya",            element:"Physical",  path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"hanya",           note:"F2P speed buffer; solid budget alternative to Bronya." },
+      { id:"yao_guang",        name:"Yao Guang",        element:"Physical",  path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"yao_guang",       note:"Nihility support; pairs well with Acheron or DoT teams." },
+      { id:"trailblazer_remembrance", name:"TB (Rem.)", element:"Ice",       path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"trailblazer_remembrance", note:"Remembrance TB — essential for Cerydra and Aglaea teams." },
+      { id:"lynx",             name:"Lynx",             element:"Quantum",   path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"lynx",            note:"F2P sustain; great for survival teams with HP-scaling DPS." },
+      { id:"sampo",            name:"Sampo",            element:"Wind",      path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"sampo",           note:"Wind DoT spreader; useful in Kafka/Black Swan teams." },
+      { id:"sparxie",          name:"Sparxie",          element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"sparxie",         note:"4-star Fire healer; decent break support for fire teams." },
     ]
   },
   {
-    tier: "B", label: "Niche — Early Game",
+    tier: "B", label: "B — Niche / Early Game",
     color: "#9090a0", bg: "rgba(100,100,140,0.05)", border: "rgba(100,100,140,0.2)",
     characters: [
-      { id:"clara",      name:"Clara",       element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"clara",  note:"Counter fun but heavily outclassed by Yunli." },
-      { id:"march7th",   name:"March 7th",   element:"Ice",       path:"Preservation",rarity:4, role:"Tank",    image:null, customIcon:"march7th",  note:"Shield + freeze utility; fine for early game." },
-      { id:"dan_heng",   name:"Dan Heng",    element:"Wind",      path:"The Hunt",    rarity:4, role:"DPS",     image:null, customIcon:"dan_heng", note:"Starter DPS; perfectly fine until you get 5-star Hunt units." },
-      { id:"bailu",      name:"Bailu",       element:"Lightning", path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1204.webp",  note:"Revival is unique but lacks cleanse; outpaced by Huohuo." },
-      { id:"serval",     name:"Serval",      element:"Lightning", path:"Erudition",   rarity:4, role:"DPS",     image:null, customIcon:"serval",  note:"Fun for DoT AoE; better options exist at this point." },
-      { id:"trailblazer_harmony", name:"TB (Harmony)", element:"Imaginary", path:"Harmony", rarity:5, role:"Support", image:null, customIcon:"trailblazer_harmony", note:"Was S-tier; new units powercreep its break support role." },
-      { id:"natasha",    name:"Natasha",     element:"Physical",  path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"natasha",  note:"No cleanse, no offensive value; fully replaced by Lynx." },
-      { id:"asta",       name:"Asta",        element:"Fire",      path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"serval",  note:"Speed buff is nice; crowded harmony slot." },
-          { id:"arlan",    name:"Arlan",       element:"Lightning", path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"arlan", note:"Free starter DPS; HP drain is risky without good sustain." },
-    
-      { id:"qingque",  name:"Qingque",  element:"Quantum",  path:"Erudition",   rarity:4, role:"DPS",    image:null, customIcon:"qingque",  note:"Fun quantum AoE, good in Pure Fiction; heavy SP cost." },
-    
-      { id:"sushang",  name:"Sushang",  element:"Physical", path:"The Hunt",    rarity:4, role:"DPS",    image:null, customIcon:"sushang",  note:"Decent F2P physical DPS; outclassed by 5-star Hunt units." },
-    
-      { id:"hook",     name:"Hook",     element:"Fire",     path:"Destruction", rarity:4, role:"DPS",    image:null, customIcon:"hook",     note:"Fun fire DPS with DoT; low ceiling compared to meta options." },
-    
-      { id:"herta",    name:"Herta",    element:"Ice",      path:"Erudition",   rarity:4, role:"DPS",    image:null, customIcon:"herta",    note:"Ice follow-up DPS; solid early but outpaced now." },
-    
-      { id:"trailblazer_physical", name:"TB (Phys)", element:"Physical", path:"Destruction", rarity:5, role:"DPS", image:null, customIcon:"trailblazer_physical", note:"The original TB; sentimental but fully outclassed." },
-    
-      { id:"guinaifen",name:"Guinaifen", element:"Fire",      path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"guinaifen", note:"DoT enabler; outclassed but functional in Kafka teams." },
-    
-      { id:"luka",     name:"Luka",      element:"Physical",  path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"luka",      note:"Physical DoT; niche role, limited team slots." },
-    
-      { id:"yukong",   name:"Yukong",    element:"Imaginary", path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"yukong",    note:"Imaginary buffer; too SP costly for most teams." },
-    
-      { id:"yangqing", name:"Yanqing",   element:"Ice",       path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"yangqing",  note:"Ice DPS but loses stacks when hit; fragile and outclassed." },
-    
-      { id:"welt",     name:"Welt",      element:"Imaginary", path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"welt",       note:"Slow debuffer; utility niche but damage is low now." },
-    
-      { id:"xueyi",    name:"Xueyi",     element:"Quantum",   path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"xueyi",     note:"Quantum DPS good for toughness; replaces nothing in endgame." },
-    
-      { id:"misha",            name:"Misha",            element:"Ice",       path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"misha",            note:"Ice DPS with freeze utility; fine early, outclassed later." },
+      { id:"welt",             name:"Welt",             element:"Imaginary", path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"welt",            note:"Slow debuffer; utility niche but damage is low in modern content." },
+      { id:"yangqing",         name:"Yanqing",          element:"Ice",       path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"yangqing",        note:"Ice DPS that loses stacks when hit; fragile and heavily outclassed." },
+      { id:"bailu",            name:"Bailu",            element:"Lightning", path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1204.webp", note:"Revival is unique but lacks cleanse; outpaced by modern healers." },
+      { id:"trailblazer_fire", name:"TB (Fire)",        element:"Fire",      path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"trailblazer_fire",note:"Fire TB tank with taunt; still usable in fire break comps." },
+      { id:"march7th",         name:"March 7th",        element:"Ice",       path:"Preservation",rarity:4, role:"Tank",    image:null, customIcon:"march7th",        note:"Shield + freeze utility; fine for early game." },
+      { id:"dan_heng",         name:"Dan Heng",         element:"Wind",      path:"The Hunt",    rarity:4, role:"DPS",     image:null, customIcon:"dan_heng",        note:"Starter DPS; fine until you get 5-star Hunt units." },
+      { id:"serval",           name:"Serval",           element:"Lightning", path:"Erudition",   rarity:4, role:"DPS",     image:null, customIcon:"serval",          note:"Fun for DoT AoE; better options exist at this point." },
+      { id:"natasha",          name:"Natasha",          element:"Physical",  path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"natasha",         note:"No cleanse, no offensive value; fully replaced by Lynx." },
+      { id:"arlan",            name:"Arlan",            element:"Lightning", path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"arlan",           note:"Free starter DPS; HP drain is risky without good sustain." },
+      { id:"trailblazer_physical", name:"TB (Phys)",    element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"trailblazer_physical", note:"The original TB; sentimental but fully outclassed." },
+      { id:"qingque",          name:"Qingque",          element:"Quantum",   path:"Erudition",   rarity:4, role:"DPS",     image:null, customIcon:"qingque",         note:"Fun quantum AoE, good in Pure Fiction; heavy SP cost." },
+      { id:"sushang",          name:"Sushang",          element:"Physical",  path:"The Hunt",    rarity:4, role:"DPS",     image:null, customIcon:"sushang",         note:"Decent F2P physical DPS; outclassed by 5-star Hunt units." },
+      { id:"hook",             name:"Hook",             element:"Fire",      path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"hook",            note:"Fun fire DPS with DoT; low ceiling compared to meta options." },
+      { id:"herta",            name:"Herta",            element:"Ice",       path:"Erudition",   rarity:4, role:"DPS",     image:null, customIcon:"herta",           note:"Ice follow-up DPS; solid early but outpaced now." },
+      { id:"guinaifen",        name:"Guinaifen",        element:"Fire",      path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"guinaifen",       note:"DoT enabler; outclassed but functional in Kafka teams." },
+      { id:"luka",             name:"Luka",             element:"Physical",  path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"luka",            note:"Physical DoT; niche role, limited team slots." },
+      { id:"yukong",           name:"Yukong",           element:"Imaginary", path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"yukong",          note:"Imaginary buffer; too SP costly for most teams." },
+      { id:"xueyi",            name:"Xueyi",            element:"Quantum",   path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"xueyi",           note:"Quantum DPS good for toughness; limited endgame value." },
+      { id:"misha",            name:"Misha",            element:"Ice",       path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"misha",           note:"Ice DPS with freeze utility; fine early, outclassed later." },
     ]
   },
 ];
@@ -419,6 +376,84 @@ function App() {
   const [analyzing, setAnalyzing] = useState(false);
   const [hoveredChar, setHoveredChar] = useState(null);
   const [tlMode, setTlMode] = useState("All"); // tier list filter
+  const [liveTierList, setLiveTierList] = useState(null);
+  const [tlLoading, setTlLoading] = useState(false);
+  const [tlError, setTlError] = useState(null);
+
+  const fetchLiveTierList = async () => {
+    setTlLoading(true); setTlError(null);
+    try {
+      const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://game8.co/games/Honkai-Star-Rail/archives/409604");
+      const res = await fetch(proxyUrl);
+      const data = await res.json();
+      const html = data.contents || "";
+
+      // Parse tier sections from Game8 HTML
+      const tierMap = { "SS Tier": "SS", "S+ Tier": "S+", "S Tier": "S", "A Tier": "A", "B Tier": "B", "C Tier": "C" };
+      const parsed = [];
+
+      // Extract character names per tier using regex on the table structure
+      const tierBlocks = html.match(/Tier[^|]*\|([^|]+\|?)+/g) || [];
+
+      // More reliable: find "SS TierSS Tier" sections and grab Star Rail character links
+      const tiers = ["SS", "S\+", "S", "A", "B", "C"];
+      const tierLabels = ["SS", "S+", "S", "A", "B", "C"];
+
+      const liveTiers = [];
+      for (let i = 0; i < tiers.length; i++) {
+        const tierKey = tierLabels[i];
+        // Match each tier block
+        const re = new RegExp(`${tiers[i]} Tier${tiers[i]} Tier([\s\S]*?)(?=${tiers[i+1] ? tiers[i+1] + ' Tier' : 'Who Do You'})`, 'i');
+        const block = html.match(re);
+        if (!block) continue;
+
+        // Extract character names from links like /Star Rail - Phainon
+        const charMatches = [...block[1].matchAll(/Star Rail - ([A-Za-z '\(\)\.]+?)(?:\s+\+|\s+-|\]|\[)/g)];
+        const names = [...new Set(charMatches.map(m => m[1].trim()).filter(n => n.length > 1 && n.length < 40))];
+
+        if (names.length > 0) {
+          liveTiers.push({ tier: tierKey, names });
+        }
+      }
+
+      if (liveTiers.length >= 3) {
+        // Map names to our character DB
+        const colorMap = { SS:"#ff2020", "S+":"#ff6010", S:"#ffd020", A:"#50b0ff", B:"#9090a0", C:"#606060" };
+        const bgMap    = { SS:"rgba(255,30,30,0.08)", "S+":"rgba(255,100,20,0.07)", S:"rgba(255,200,20,0.06)", A:"rgba(50,140,255,0.05)", B:"rgba(100,100,140,0.05)", C:"rgba(60,60,60,0.05)" };
+        const borderMap= { SS:"rgba(255,50,50,0.35)", "S+":"rgba(255,100,20,0.3)", S:"rgba(255,200,20,0.28)", A:"rgba(50,140,255,0.22)", B:"rgba(100,100,140,0.2)", C:"rgba(80,80,80,0.2)" };
+        const labelMap = { SS:"SS — Game-Breaking", "S+":"S+ — Excellent", S:"S — Strong Meta", A:"A — Decent/Situational", B:"B — Niche/Early Game", C:"C — Outclassed" };
+
+        const mapped = liveTiers.map(t => ({
+          tier: t.tier,
+          label: labelMap[t.tier] || t.tier,
+          color: colorMap[t.tier] || "#888",
+          bg: bgMap[t.tier] || "transparent",
+          border: borderMap[t.tier] || "rgba(100,100,100,0.2)",
+          characters: t.names.map(name => {
+            // Try to find in our DB first
+            const known = [...CHARACTERS, ...TIER_LIST.flatMap(tl => tl.characters)].find(c =>
+              c.name.toLowerCase() === name.toLowerCase() ||
+              c.name.toLowerCase().replace(/[^a-z]/g,'').includes(name.toLowerCase().replace(/[^a-z]/g,'').slice(0,6))
+            );
+            if (known) return { ...known, note: known.note || known.desc || "" };
+            // Unknown char — show as placeholder
+            const idGuess = name.toLowerCase().replace(/[^a-z0-9]/g,"_");
+            return { id: idGuess, name, element:"Physical", path:"Unknown", rarity:5, role:"DPS", image:null, customIcon: idGuess, note: "New character — check Game8 for details." };
+          }).filter(Boolean)
+        }));
+
+        setLiveTierList(mapped);
+        setTlError(null);
+      } else {
+        setTlError("Could not parse tier list from Game8 — showing cached version.");
+      }
+    } catch(e) {
+      setTlError("Failed to fetch: " + e.message);
+    }
+    setTlLoading(false);
+  };
+
+  const activeTierList = liveTierList || TIER_LIST;
   const [liveData, setLiveData] = useState(null);
   const [liveLoading, setLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState(null);
@@ -1062,9 +1097,15 @@ const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
               <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12 }}>
                 <div>
                   <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",textTransform:"uppercase",marginBottom:4 }}>◆ Character Tier List</div>
-                  <div style={{ fontSize:13,color:"#5070a0" }}>Updated for v4.0 · March 2026 · Based on MoC, PF & Apocalyptic Shadow</div>
+                  <div style={{ fontSize:13,color:"#5070a0" }}>
+                    {liveTierList ? <span style={{color:"#60c080"}}>✓ Live data from Game8</span> : "Source: Game8 v3.8 · Jan 2026 · MoC, PF & Apocalyptic Shadow"}
+                    {tlError && <span style={{color:"#ff8060",marginLeft:8,fontSize:11}}>{tlError}</span>}
+                  </div>
                 </div>
-                <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+                <div style={{ display:"flex",gap:8,flexWrap:"wrap",alignItems:"center" }}>
+                  <button className="glow-btn" onClick={fetchLiveTierList} disabled={tlLoading} style={{ background:"rgba(20,60,40,.5)",border:"1px solid rgba(60,180,100,.4)",borderRadius:10,padding:"6px 14px",fontSize:11,letterSpacing:2,color:tlLoading?"#406050":"#80d0a0",fontFamily:"Rajdhani" }}>
+                    {tlLoading ? "⟳ LOADING..." : "⟳ REFRESH FROM GAME8"}
+                  </button>
                   {["All","DPS","Support","Healer","Tank","Sub-DPS"].map(f=>(
                     <button key={f} className="filter-pill" onClick={()=>setTlMode(f)} style={{ background:tlMode===f?"rgba(100,120,255,.3)":"rgba(40,50,100,.3)",border:`1px solid ${tlMode===f?"rgba(100,120,255,.6)":"rgba(60,80,140,.3)"}`,borderRadius:20,padding:"5px 13px",fontSize:12,color:tlMode===f?"#c0d0ff":"#6080a0",fontFamily:"Rajdhani",letterSpacing:1 }}>{f}</button>
                   ))}
@@ -1072,7 +1113,7 @@ const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
               </div>
             </div>
 
-            {TIER_LIST.map(tier => {
+            {activeTierList.map(tier => {
               const chars = tlMode==="All" ? tier.characters : tier.characters.filter(c=>c.role===tlMode);
               if(chars.length===0) return null;
               return (
