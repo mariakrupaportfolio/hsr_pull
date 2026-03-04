@@ -1,12 +1,952 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HSR Pull Advisor</title>
-    <script type="module" crossorigin src="/hsr_pull/assets/index-Dd9k09u6.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HSR Warp Advisor</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050812; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+// ── Custom uploaded character icons ──────────────────────────────────────────
+const CUSTOM_ICONS = {};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const ELEMENT_COLORS = {
+  Fire:      { bg: "#ff4d1c", glow: "#ff6b35", text: "#ffcab5" },
+  Ice:       { bg: "#4db8ff", glow: "#7dd4ff", text: "#c8ebff" },
+  Wind:      { bg: "#4dff9e", glow: "#7dffc0", text: "#c8fff0" },
+  Lightning: { bg: "#c44dff", glow: "#d97aff", text: "#ecc8ff" },
+  Quantum:   { bg: "#5c4dff", glow: "#8a7aff", text: "#ccc8ff" },
+  Imaginary: { bg: "#ffdf4d", glow: "#ffe87a", text: "#fff6c8" },
+  Physical:  { bg: "#aaaaaa", glow: "#cccccc", text: "#eeeeee" },
+};
+
+const PATH_ICONS = {
+  Destruction: "⚔", "The Hunt": "🏹", Erudition: "📚",
+  Harmony: "♪", Nihility: "◎", Preservation: "◈", Abundance: "✦",
+};
+
+// ── Character data ────────────────────────────────────────────────────────────
+const CHARACTERS = [
+  { id:"blade",      name:"Blade",        element:"Wind",      path:"Destruction", rarity:5, role:"DPS",     synergies:["bronya","pela","luocha"],               image:null, customIcon:"blade",  desc:"Self-sustaining wind DPS who consumes HP for power." },
+  { id:"clara",      name:"Clara",        element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     synergies:["march7th","gepard","tingyun"],            image:null, customIcon:"clara",  desc:"Counter-attack DPS who retaliates when hit." },
+  { id:"yunli",      name:"Yunli",        element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     synergies:["robin","tingyun","huohuo"],               image:null, customIcon:"yunli",  desc:"Physical DPS with powerful counter-attack mechanics." },
+  { id:"firefly",    name:"Firefly",      element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     synergies:["ruan_mei","gallagher","trailblazer_harmony"], image:null, customIcon:"firefly", desc:"Break specialist dealing massive fire damage in enhanced state." },
+  { id:"jingliu",    name:"Jingliu",      element:"Ice",       path:"Destruction", rarity:5, role:"DPS",     synergies:["bronya","ruan_mei","tingyun","pela"],     image:null, customIcon:"jingliu",  desc:"Ice DPS with enhanced state drawing team HP for massive DMG." },
+  { id:"seele",      name:"Seele",        element:"Quantum",   path:"The Hunt",    rarity:5, role:"DPS",     synergies:["bronya","pela","tingyun","silver_wolf"],  image:null, customIcon:"seele",  desc:"Single-target quantum DPS with bonus turns on kill." },
+  { id:"dr_ratio",   name:"Dr. Ratio",    element:"Imaginary", path:"The Hunt",    rarity:5, role:"DPS",     synergies:["topaz","robin","aventurine"],             image:null, customIcon:"dr_ratio",  desc:"Imaginary DPS empowered by debuffs on enemies." },
+  { id:"boothill",   name:"Boothill",     element:"Fire",      path:"The Hunt",    rarity:5, role:"DPS",     synergies:["ruan_mei","bronya","gallagher"],          image:null, customIcon:"boothill",  desc:"Fire break DPS with gunslinger mechanics." },
+  { id:"feixiao",    name:"Feixiao",      element:"Wind",      path:"The Hunt",    rarity:5, role:"DPS",     synergies:["robin","topaz","aventurine"],             image:null, customIcon:"feixiao",  desc:"Follow-up attack wind DPS scaling with team ults." },
+  { id:"topaz",      name:"Topaz",        element:"Fire",      path:"The Hunt",    rarity:5, role:"Sub-DPS", synergies:["feixiao","robin","aventurine"],           image:null, customIcon:"topaz",  desc:"Fire sub-DPS who enhances follow-up attacks with Numby." },
+  { id:"argenti",    name:"Argenti",      element:"Physical",  path:"Erudition",   rarity:5, role:"DPS",     synergies:["tingyun","bronya","huohuo"],              image:null, customIcon:"argenti",  desc:"AoE physical DPS with powerful ultimate." },
+  { id:"himeko",     name:"Himeko",       element:"Fire",      path:"Erudition",   rarity:5, role:"DPS",     synergies:["ruan_mei","tingyun","gallagher"],         image:null, customIcon:"himeko",  desc:"Fire AoE DPS who triggers follow-ups on breaks." },
+  { id:"serval",     name:"Serval",       element:"Lightning", path:"Erudition",   rarity:4, role:"DPS",     synergies:["tingyun","bronya","pela"],                image:null, customIcon:"serval",  desc:"Lightning DPS good in AoE scenarios." },
+  { id:"jade",       name:"Jade",         element:"Quantum",   path:"Erudition",   rarity:5, role:"DPS",     synergies:["robin","feixiao","aventurine"],           image:null, customIcon:"jade",  desc:"Quantum DPS empowered by follow-up attack teams." },
+  { id:"jing_yuan",  name:"Jing Yuan",    element:"Lightning", path:"Erudition",   rarity:5, role:"DPS",     synergies:["robin","sunday","tingyun"],               image:null, customIcon:"jing_yuan",  desc:"Lightning DPS with powerful follow-up from Lightning Lord." },
+  { id:"bronya",     name:"Bronya",       element:"Wind",      path:"Harmony",     rarity:5, role:"Support", synergies:["seele","blade","jingliu"],               image:null, customIcon:"bronya",  desc:"Universal support buffing DMG and advancing turns." },
+  { id:"tingyun",    name:"Tingyun",      element:"Lightning", path:"Harmony",     rarity:4, role:"Support", synergies:["seele","jingliu","argenti"],              image:null, customIcon:"tingyun",  desc:"Lightning support providing energy and ATK buffs." },
+  { id:"ruan_mei",   name:"Ruan Mei",     element:"Ice",       path:"Harmony",     rarity:5, role:"Support", synergies:["firefly","boothill","himeko"],            image:null, customIcon:"ruan_mei",  desc:"Break-focused support boosting weakness break efficiency." },
+  { id:"robin",      name:"Robin",        element:"Physical",  path:"Harmony",     rarity:5, role:"Support", synergies:["feixiao","topaz","dr_ratio"],             image:null, customIcon:"robin",  desc:"Universal support boosting all actions and crit DMG." },
+  { id:"sunday",     name:"Sunday",       element:"Imaginary", path:"Harmony",     rarity:5, role:"Support", synergies:["jing_yuan","argenti","jingliu"],         image:null, customIcon:"sunday",  desc:"Summon and follow-up support with energy regen." },
+  { id:"asta",       name:"Asta",         element:"Fire",      path:"Harmony",     rarity:4, role:"Support", synergies:["himeko","argenti","blade"],              image:null, customIcon:"asta",  desc:"Speed buffer and fire support." },
+  { id:"trailblazer_harmony", name:"TB (Harmony)", element:"Imaginary", path:"Harmony", rarity:5, role:"Support", synergies:["firefly","boothill","himeko"], image:null, customIcon:"trailblazer_harmony", desc:"Break support with SP positive kit." },
+  { id:"kafka",      name:"Kafka",        element:"Lightning", path:"Nihility",    rarity:5, role:"Sub-DPS", synergies:["black_swan","ruan_mei","huohuo"],         image:null, customIcon:"kafka",  desc:"DoT specialist triggering lightning DoT repeatedly." },
+  { id:"black_swan", name:"Black Swan",   element:"Wind",      path:"Nihility",    rarity:5, role:"Sub-DPS", synergies:["kafka","ruan_mei","huohuo"],              image:null, customIcon:"black_swan",  desc:"Wind DoT DPS stacking Arcana debuffs." },
+  { id:"pela",       name:"Pela",         element:"Ice",       path:"Nihility",    rarity:4, role:"Support", synergies:["seele","jingliu","feixiao"],              image:null, customIcon:"pela",  desc:"DEF shredder supporting any team." },
+  { id:"silver_wolf",name:"Silver Wolf",  element:"Quantum",   path:"Nihility",    rarity:5, role:"Support", synergies:["seele","fu_xuan"],                       image:null, customIcon:"silver_wolf",  desc:"Implants weaknesses and shreds DEF/RES." },
+  { id:"acheron",    name:"Acheron",      element:"Lightning", path:"Nihility",    rarity:5, role:"DPS",     synergies:["pela","jiaoqiu","aventurine"],            image:null, customIcon:"acheron",  desc:"Lightning DPS powered by stacking Slashed Dream charges." },
+  { id:"jiaoqiu",    name:"Jiaoqiu",      element:"Fire",      path:"Nihility",    rarity:5, role:"Support", synergies:["acheron","kafka","black_swan"],           image:null, customIcon:"jiaoqiu",  desc:"Fire support amplifying Nihility team DMG." },
+  { id:"sampo",      name:"Sampo",        element:"Wind",      path:"Nihility",    rarity:4, role:"Sub-DPS", synergies:["kafka","black_swan","ruan_mei"],          image:null, customIcon:"sampo", desc:"Wind DoT enabler spreading debuffs across enemies." },
+  { id:"gepard",     name:"Gepard",       element:"Ice",       path:"Preservation",rarity:5, role:"Tank",    synergies:["seele","jingliu","kafka"],                image:null, customIcon:"gepard",  desc:"Ice tank with team-wide shield ultimate." },
+  { id:"fu_xuan",    name:"Fu Xuan",      element:"Quantum",   path:"Preservation",rarity:5, role:"Tank",    synergies:["seele","jingliu","kafka"],                image:null, customIcon:"fu_xuan",  desc:"Quantum tank redirecting damage and boosting crit." },
+  { id:"aventurine", name:"Aventurine",   element:"Imaginary", path:"Preservation",rarity:5, role:"Tank",    synergies:["dr_ratio","feixiao","topaz"],             image:null, customIcon:"aventurine",  desc:"Imaginary tank generating shields via follow-up attacks." },
+  { id:"march7th",   name:"March 7th",    element:"Ice",       path:"Preservation",rarity:4, role:"Tank",    synergies:["clara","seele","blade"],                  image:null, customIcon:"march7th",  desc:"Ice shielder with freeze and taunt mechanics." },
+  { id:"luocha",     name:"Luocha",       element:"Imaginary", path:"Abundance",   rarity:5, role:"Healer",  synergies:["blade","kafka","jingliu"],                image:null, customIcon:"luocha",  desc:"Imaginary healer with passive auto-healing field." },
+  { id:"huohuo",     name:"Huohuo",       element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  synergies:["kafka","blade","argenti"],               image:null, customIcon:"huohuo",  desc:"Wind healer restoring energy and healing the team." },
+  { id:"gallagher",  name:"Gallagher",    element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  synergies:["firefly","boothill","himeko"],            image:null, customIcon:"gallagher",  desc:"Break-focused healer enhancing weakness break damage." },
+  { id:"natasha",    name:"Natasha",      element:"Physical",  path:"Abundance",   rarity:4, role:"Healer",  synergies:["clara","march7th","gepard"],              image:null, customIcon:"natasha",  desc:"Reliable single-target healer, good for beginners." },
+  { id:"sparxie",           name:"Sparxie",           element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  synergies:["firefly","boothill","himeko"],            image:null, customIcon:"sparxie",           desc:"Fire 4-star healer supporting break and fire-element teams." },
+  { id:"cipher",            name:"Cipher",            element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", synergies:["castorice","tribbie","seele"],            image:null, customIcon:"cipher",            desc:"Quantum Harmony support enabling quantum DPS teams." },
+  { id:"saber",             name:"Saber (Artoria)",   element:"Wind",      path:"Destruction", rarity:5, role:"DPS",     synergies:["robin","bronya","huohuo"],                image:null, customIcon:"saber",             desc:"Wind Destruction DPS — Fate/stay night collaboration character." },
+  { id:"archer",            name:"Archer (EMIYA)",    element:"Quantum",      path:"The Hunt",    rarity:5, role:"DPS",     synergies:["robin","topaz","aventurine"],             image:null, customIcon:"archer",            desc:"Fire Hunt DPS — Fate/stay night collaboration character." },
+  { id:"hysilens",          name:"Hysilens",          element:"Physical", path:"Abundance",   rarity:5, role:"Healer",  synergies:["kafka","black_swan","ruan_mei"],          image:null, customIcon:"hysilens",          desc:"Lightning healer synergizing with DoT teams." },
+  { id:"evernight",         name:"Evernight",         element:"Ice",   path:"Nihility",    rarity:5, role:"Support", synergies:["acheron","kafka","black_swan"],           image:null, customIcon:"evernight",         desc:"Quantum Nihility support boosting debuff and DoT teams." },
+  { id:"permansor_terrae",  name:"Permansor Terrae",  element:"Physical",      path:"Preservation",rarity:5, role:"Tank",    synergies:["firefly","fugue","ruan_mei"],             image:null, customIcon:"permansor_terrae",  desc:"Fire Preservation tank with break-team synergy." },
+  { id:"cyrene",            name:"Cyrene",            element:"Ice",  path:"The Hunt",    rarity:5, role:"DPS",     synergies:["robin","topaz","aventurine"],             image:null, customIcon:"cyrene",            desc:"Physical Hunt DPS with strong single-target follow-up kit." },
+  { id:"the_dhalia",        name:"The Dhalia",        element:"Fire",      path:"Abundance",   rarity:5, role:"Healer",  synergies:["kafka","black_swan","ruan_mei"],          image:null, customIcon:"the_dhalia",       desc:"Wind healer with powerful DoT team synergy." },
+  { id:"yao_guang",         name:"Yao Guang",         element:"Physical",       path:"Nihility",    rarity:5, role:"Support", synergies:["kafka","black_swan","acheron"],           image:null, customIcon:"yao_guang",        desc:"Ice Nihility support boosting DoT and debuff teams." },
+  { id:"misha",            name:"Misha",             element:"Ice",       path:"Destruction", rarity:4, role:"DPS",     synergies:["pela","bronya","tingyun"],                image:null, customIcon:"misha",            desc:"Ice DPS who freezes and damages enemies with his ultimate." },
+  { id:"trailblazer_remembrance", name:"TB (Remembrance)", element:"Ice", path:"Remembrance", rarity:5, role:"Support", synergies:["cerydra","aglaea","the_herta"], image:null, customIcon:"trailblazer_remembrance", desc:"Remembrance TB summoning Mem to buff and sustain allies." },
+  { id:"march7th_hunt", name:"March 7th (Hunt)", element:"Imaginary", path:"The Hunt", rarity:4, role:"Sub-DPS", synergies:["feixiao","robin","aventurine"],    image:null, customIcon:"march7th_hunt", desc:"Imaginary Hunt-path March 7th — powerful follow-up Sub-DPS." },
+  { id:"lingsha",     name:"Lingsha",      element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  synergies:["firefly","boothill","ruan_mei"],          image:null, customIcon:"lingsha",     desc:"Wind healer with break synergy cleansing and sustaining break teams." },
+  { id:"moze",        name:"Moze",         element:"Lightning", path:"The Hunt",    rarity:4, role:"Sub-DPS", synergies:["feixiao","robin","aventurine"],           image:null, customIcon:"moze",        desc:"Lightning follow-up Sub-DPS prey-marking enemies for Feixiao teams." },
+  { id:"rappa",       name:"Rappa",        element:"Imaginary", path:"Erudition",   rarity:5, role:"DPS",     synergies:["ruan_mei","fugue","gallagher"],           image:null, customIcon:"rappa",       desc:"Imaginary break DPS dealing massive toughness damage to all enemies." },
+  { id:"fugue",       name:"Fugue",        element:"Fire",      path:"Nihility",    rarity:5, role:"Support", synergies:["firefly","boothill","ruan_mei"],          image:null, customIcon:"fugue",       desc:"Fire Nihility support enhancing Super Break damage significantly." },
+  { id:"the_herta",   name:"The Herta",    element:"Ice",       path:"Erudition",   rarity:5, role:"DPS",     synergies:["herta","tribbie","robin"],                image:null, customIcon:"the_herta",   desc:"Ice Erudition DPS who transforms Herta into a devastating ally." },
+  { id:"mydei",       name:"Mydei",        element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     synergies:["sunday","tribbie","lingsha"],             image:null, customIcon:"mydei",       desc:"Fire Destruction DPS scaling massively off max HP." },
+  { id:"anaxa",       name:"Anaxa",        element:"Wind",      path:"Erudition",   rarity:5, role:"DPS",     synergies:["tribbie","robin","aventurine"],           image:null, customIcon:"anaxa",       desc:"Wind Erudition DPS with powerful AoE follow-up mechanics." },
+  { id:"hanya",       name:"Hanya",        element:"Physical",  path:"Harmony",     rarity:4, role:"Support", synergies:["seele","blade","imbibitor_lunae"],        image:null, customIcon:"hanya",      desc:"Physical support buffing SPD and ATK for the team." },
+  { id:"xueyi",       name:"Xueyi",        element:"Quantum",   path:"Destruction", rarity:4, role:"DPS",     synergies:["silver_wolf","pela","fu_xuan"],           image:null, customIcon:"xueyi",      desc:"Quantum DPS dealing bonus DMG when enemies have debuffs." },
+  { id:"welt",        name:"Welt",         element:"Imaginary", path:"Nihility",    rarity:5, role:"Sub-DPS", synergies:["kafka","black_swan","pela"],              image:null, customIcon:"welt",        desc:"Imaginary debuffer slowing enemies and dealing AoE damage." },
+  { id:"yangqing",   name:"Yanqing",      element:"Ice",       path:"The Hunt",    rarity:5, role:"DPS",     synergies:["gepard","fu_xuan","tingyun"],             image:null, customIcon:"yangqing",   desc:"Ice single-target DPS scaling with Soulsteel Sync stacks." },
+  { id:"yukong",      name:"Yukong",       element:"Imaginary", path:"Harmony",     rarity:4, role:"Support", synergies:["seele","imbibitor_lunae","dr_ratio"],     image:null, customIcon:"yukong",     desc:"Imaginary support buffing ATK and crit stats." },
+  { id:"luka",        name:"Luka",         element:"Physical",  path:"Nihility",    rarity:4, role:"Sub-DPS", synergies:["kafka","black_swan","sampo"],             image:null, customIcon:"luka",       desc:"Physical DoT DPS applying Bleed for sustained damage." },
+  { id:"guinaifen",   name:"Guinaifen",    element:"Fire",      path:"Nihility",    rarity:4, role:"Sub-DPS", synergies:["kafka","black_swan","ruan_mei"],          image:null, customIcon:"guinaifen",  desc:"Fire DoT enabler stacking Firekiss debuffs." },
+  { id:"sparkle",     name:"Sparkle",      element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", synergies:["seele","qingque","imbibitor_lunae"],      image:null, customIcon:"sparkle",   desc:"Quantum support advancing SP and boosting crit DMG." },
+  { id:"imbibitor_lunae", name:"IL (Dan Heng)", element:"Imaginary", path:"Destruction", rarity:5, role:"DPS",     synergies:["tingyun","bronya","luocha"],              image:null, customIcon:"imbibitor_lunae", desc:"Imaginary hyper-carry spending SP for enhanced attacks." },
+  { id:"trailblazer_physical", name:"TB (Physical)", element:"Physical", path:"Destruction", rarity:5, role:"DPS", synergies:["asta","bronya","natasha"], image:null, customIcon:"trailblazer_physical", desc:"Physical Destruction TB — early-game starter carry." },
+  { id:"trailblazer_fire", name:"TB (Fire)", element:"Fire",    path:"Preservation",rarity:5, role:"Tank",    synergies:["himeko","asta","gallagher"],              image:null, customIcon:"trailblazer_fire", desc:"Fire Preservation TB taunting enemies with shields and enhanced AoE." },
+  { id:"herta",       name:"Herta",        element:"Ice",       path:"Erudition",   rarity:4, role:"DPS",     synergies:["himeko","tingyun","pela"],                image:null, customIcon:"herta",     desc:"Ice AoE DPS who follow-up attacks when enemies are low HP." },
+  { id:"hook",        name:"Hook",         element:"Fire",      path:"Destruction", rarity:4, role:"DPS",     synergies:["asta","tingyun","natasha"],               image:null, customIcon:"hook",      desc:"Fire AoE DPS who applies DoT burns on enemies." },
+  { id:"sushang",     name:"Sushang",      element:"Physical",  path:"The Hunt",    rarity:4, role:"DPS",     synergies:["pela","bronya","natasha"],                image:null, customIcon:"sushang",   desc:"Physical single-target DPS with stackable sword debuff." },
+  { id:"qingque",    name:"Qingque",      element:"Quantum",   path:"Erudition",   rarity:4, role:"DPS",     synergies:["silver_wolf","fu_xuan","tingyun"],        image:null, customIcon:"qingque",  desc:"Quantum AoE DPS with gacha-style tile mechanics. Strong in pure fiction." },
+  { id:"arlan",      name:"Arlan",        element:"Lightning", path:"Destruction", rarity:4, role:"DPS",     synergies:["asta","tingyun","natasha"],               image:null, customIcon:"arlan",  desc:"Lightning DPS who drains own HP for power. Free starter character." },
+  { id:"bailu",      name:"Bailu",        element:"Lightning", path:"Abundance",   rarity:5, role:"Healer",  synergies:["blade","kafka","argenti"],               image:null, customIcon:"bailu",  desc:"Lightning healer with revival mechanic." },
+  { id:"lynx",       name:"Lynx",         element:"Quantum",   path:"Abundance",   rarity:4, role:"Healer",  synergies:["clara","blade","gepard"],                 image:null, customIcon:"lynx",    desc:"Quantum healer who boosts HP and is excellent with survival teams." },
+  { id:"trailblazer_ice", name:"TB (Ice)",element:"Ice",       path:"Remembrance", rarity:5, role:"Support", synergies:["cerydra","jade","robin"],                 image:null, customIcon:"trailblazer_ice", desc:"Remembrance path TB summoning Mem to shield and buff the team." },
+  { id:"dan_heng",   name:"Dan Heng",     element:"Wind",      path:"The Hunt",    rarity:4, role:"DPS",     synergies:["bronya","tingyun","pela"],                image:null, customIcon:"dan_heng",  desc:"Wind single-target DPS, great starter carry." },
+  { id:"cerydra",    name:"Cerydra",      element:"Ice",       path:"Remembrance", rarity:5, role:"DPS",     synergies:["trailblazer_ice","robin","aventurine"],   image:null, customIcon:"cerydra",   desc:"New Remembrance DPS with powerful ice memory mechanics." },
+];
+
+const UPCOMING_BANNERS = [
+  {
+    id:"phainon_banner", character:"phainon", type:"Limited 5★", featured:["phainon","gallagher"],
+    eidolonNotes:[
+      "E0 — Already dominant; no eidolons needed to clear all content.",
+      "E1 — Minor DMG boost; not worth chasing.",
+      "E2 — Noticeable improvement to sustained damage.",
+      "E6 — Huge power spike but extremely costly. Skip unless whale.",
+    ],
+    whyPull:"Phainon is the current strongest DPS in the game. His ultimate form makes him nearly unkillable while dealing top-tier damage. If you have no premier 5★ DPS, this is your highest-priority pull.",
+    whySkip:"If you already have Feixiao, Firefly, or Acheron at E0, you may not need him for current content. New players should prioritise a sustain unit first.",
+    teamTip:"Best with Robin (Physical) + Aventurine. Alternatively Tribbie + Hyacine.",
+    tier:"SS",
+  },
+  {
+    id:"castorice_banner", character:"castorice", type:"Limited 5★", featured:["castorice","lynx"],
+    eidolonNotes:[
+      "E0 — Fully functional and dominant in Pure Fiction and AoE content.",
+      "E1 — Improves follow-up damage consistency.",
+      "E2 — Strong survivability improvement.",
+      "E6 — Transformative but not needed for endgame.",
+    ],
+    whyPull:"Castorice has broken global passive damage that dominates Pure Fiction. Her Quantum typing gives great coverage, and she pairs with almost any team.",
+    whySkip:"Very SP hungry. If your team struggles with SP management or you lack Tribbie/Aventurine, her value drops.",
+    teamTip:"Best with Tribbie (Quantum) + Fu Xuan/Aventurine. Blade makes an excellent Sub-DPS companion.",
+    tier:"SS",
+  },
+  {
+    id:"feixiao_rerun", character:"feixiao", type:"Limited 5★ Rerun", featured:["feixiao","topaz","moze"],
+    eidolonNotes:[
+      "E0 — Top-tier boss killer; no eidolons needed.",
+      "E1 — Significant buff to follow-up attack frequency.",
+      "E2 — Excellent damage boost; worth pulling if you love the character.",
+      "E6 — Very powerful but she's already great at E0.",
+    ],
+    whyPull:"Feixiao is the gold standard Hunt DPS. With Robin + Aventurine she clears MoC at an incredibly fast pace. If you missed her first banner, this rerun is your chance.",
+    whySkip:"The follow-up archetype requires Robin and Aventurine to truly shine. Without them, her ceiling is lower.",
+    teamTip:"BiS: Feixiao + Robin + Aventurine + Topaz/Moze. Budget: Feixiao + Bronya + Fu Xuan + Topaz.",
+    tier:"SS+",
+  },
+];
+
+// ── Tier List data (v4.0 / March 2026) ───────────────────────────────────────
+// Based on Prydwen, Game8, FRVR, Beebom consensus
+const TIER_LIST = [
+  {
+    tier: "SS", label: "Broken — Must Pull",
+    color: "#ff3030", bg: "rgba(255,40,40,0.08)", border: "rgba(255,60,60,0.35)",
+    characters: [
+      { id:"phainon",    name:"Phainon",    element:"Physical",  path:"Remembrance", rarity:5, role:"DPS",    image:null, customIcon:"phainon",  note:"Strongest DPS. Ultimate form is nearly indestructible." },
+      { id:"castorice",  name:"Castorice",  element:"Quantum",   path:"Remembrance", rarity:5, role:"Sub-DPS", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1402.webp",  note:"Broken global passive + AoE. Dominates Pure Fiction." },
+      { id:"robin",      name:"Robin",      element:"Physical",  path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"robin",  note:"Universal support. Buffs every action, zero downsides." },
+      { id:"tribbie",    name:"Tribbie",    element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1401.webp",  note:"Sub-DPS masquerading as support. Rivals Robin in quantum comps." },
+      { id:"hyacine",    name:"Hyacine",    element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1403.webp",  note:"Best healer in the game right now." },
+      { id:"ruan_mei",   name:"Ruan Mei",   element:"Ice",       path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"ruan_mei",  note:"Meta-defining break support. Fits almost every team." },
+    ]
+  },
+  {
+    tier: "SS+", label: "Excellent — Top Tier",
+    color: "#ff7020", bg: "rgba(255,110,30,0.07)", border: "rgba(255,110,30,0.3)",
+    characters: [
+      { id:"feixiao",    name:"Feixiao",    element:"Wind",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"feixiao",  note:"Gold standard boss killer. Best with Robin+Aventurine." },
+      { id:"acheron",    name:"Acheron",    element:"Lightning", path:"Nihility",    rarity:5, role:"DPS",     image:null, customIcon:"acheron",  note:"Dominant burst DPS. Punishes debuffs heavily." },
+      { id:"firefly",    name:"Firefly",    element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"firefly",  note:"Super Break queen. Dominates if enemy has Fire weakness." },
+      { id:"aventurine", name:"Aventurine", element:"Imaginary", path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"aventurine",  note:"Best tank for follow-up teams. Deals damage while shielding." },
+      { id:"aglaea",     name:"Aglaea",     element:"Lightning", path:"Remembrance", rarity:5, role:"DPS",     image:"https://api.hakush.in/hsr/UI/avatarshopicon/1405.webp",  note:"Strong new DPS with excellent team synergy." },
+      { id:"sunday",     name:"Sunday",     element:"Imaginary", path:"Harmony",     rarity:5, role:"Support",image:null, customIcon:"sunday",  note:"Best support for Jing Yuan & summon characters." },
+      { id:"cerydra",    name:"Cerydra",    element:"Ice",       path:"Remembrance", rarity:5, role:"DPS",     image:null, customIcon:"cerydra", note:"New Remembrance DPS, excels with TB (Ice) pairing." },
+      { id:"trailblazer_ice", name:"TB (Ice)", element:"Ice",   path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"trailblazer_ice", note:"Summons Mem to shield and buff; strong Remembrance enabler." },
+    
+      { id:"the_herta",  name:"The Herta",  element:"Ice",       path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"the_herta",  note:"Ice Erudition powerhouse. Transforms Herta into S-tier damage." },
+    
+      { id:"mydei",      name:"Mydei",      element:"Fire",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"mydei",      note:"HP-scaling Fire DPS with massive burst potential." },
+    ]
+  },
+  {
+    tier: "S", label: "Strong — Meta Pick",
+    color: "#ffd020", bg: "rgba(255,200,20,0.06)", border: "rgba(255,200,20,0.28)",
+    characters: [
+      { id:"boothill",   name:"Boothill",   element:"Fire",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"boothill",  note:"King of single-target break. Great with Ruan Mei." },
+      { id:"kafka",      name:"Kafka",       element:"Lightning", path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"kafka",  note:"DoT core — needs Hysilens or Black Swan to shine." },
+      { id:"black_swan", name:"Black Swan",  element:"Wind",      path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"black_swan",  note:"DoT amplifier with massive debuff stacking." },
+      { id:"jiaoqiu",    name:"Jiaoqiu",     element:"Fire",      path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"jiaoqiu",  note:"Essential Acheron partner. Huge vulnerability debuffer." },
+      { id:"fu_xuan",    name:"Fu Xuan",     element:"Quantum",   path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"fu_xuan",  note:"Best non-sustain tank; crit buff + damage redirect." },
+      { id:"jade",       name:"Jade",        element:"Quantum",   path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"jade",  note:"Strong in follow-up teams; scales with team attacks." },
+      { id:"huohuo",     name:"Huohuo",      element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1217.webp",  note:"Energy refund healer; excellent in aggressive teams." },
+      { id:"jing_yuan",  name:"Jing Yuan",   element:"Lightning", path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"jing_yuan",  note:"Strong with Sunday. Lightning Lord hits hard." },
+    
+      { id:"sparkle",  name:"Sparkle",   element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"sparkle",  note:"Exceptional quantum support; SP positive and strong crit buffs." },
+    
+      { id:"fugue",      name:"Fugue",      element:"Fire",      path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"fugue",      note:"Super Break support. Essential for Firefly/Boothill teams." },
+    
+      { id:"rappa",      name:"Rappa",      element:"Imaginary", path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"rappa",      note:"Imaginary break DPS with amazing toughness damage AoE." },
+    
+      { id:"lingsha",    name:"Lingsha",    element:"Wind",      path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"lingsha",    note:"Best healer for break teams. Wind DoT + cleanse + break buffs." },
+    
+      { id:"anaxa",      name:"Anaxa",      element:"Wind",      path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"anaxa",      note:"New Wind Erudition DPS with strong follow-up synergy." },
+    
+      { id:"cyrene",           name:"Cyrene",           element:"Ice",  path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"cyrene",           note:"Physical Hunt DPS — strong single-target and follow-up." },
+    
+      { id:"hysilens",         name:"Hysilens",         element:"Physical", path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"hysilens",         note:"Top-tier healer in DoT teams. Great with Kafka/Black Swan." },
+    
+      { id:"archer",           name:"Archer (EMIYA)",   element:"Quantum",      path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"archer",           note:"Fate collab — Fire Hunt DPS with powerful follow-up kit." },
+    
+      { id:"saber",            name:"Saber (Artoria)",  element:"Wind",      path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"saber",            note:"Fate collab — Wind Destruction DPS with strong burst damage." },
+    ]
+  },
+  {
+    tier: "S-", label: "Good — Solid Choice",
+    color: "#60d060", bg: "rgba(80,200,80,0.06)", border: "rgba(80,200,80,0.25)",
+    characters: [
+      { id:"jingliu",    name:"Jingliu",     element:"Ice",       path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"jingliu",  note:"Ice powerhouse; HP drain mechanic limits team flexibility." },
+      { id:"blade",      name:"Blade",       element:"Wind",      path:"Destruction", rarity:5, role:"DPS",    image:null, customIcon:"blade",  note:"Great with Castorice as Sub-DPS; self-sustaining." },
+      { id:"topaz",      name:"Topaz",       element:"Fire",      path:"The Hunt",    rarity:5, role:"Sub-DPS", image:null, customIcon:"topaz",  note:"Essential for Feixiao teams; Numby follow-up is reliable." },
+      { id:"bronya",     name:"Bronya",      element:"Wind",      path:"Harmony",     rarity:5, role:"Support", image:"https://api.hakush.in/hsr/UI/avatarshopicon/1101.webp",  note:"Premium single-target buffer; great with hyper-carry DPS." },
+      { id:"silver_wolf",name:"Silver Wolf", element:"Quantum",   path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"silver_wolf",  note:"Weakness implant is incredible for mono-element teams." },
+      { id:"luocha",     name:"Luocha",      element:"Imaginary", path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"luocha",  note:"Passive cleanse field; flexible healer for aggressive teams." },
+      { id:"dr_ratio",   name:"Dr. Ratio",   element:"Imaginary", path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"dr_ratio",  note:"Strong F2P-friendly DPS; follow-up hits hard with debuffs." },
+      { id:"yunli",      name:"Yunli",       element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"yunli",  note:"Counter-attack DPS with Clara vibes but stronger burst." },
+    
+      { id:"imbibitor_lunae", name:"IL (Dan Heng)", element:"Imaginary", path:"Destruction", rarity:5, role:"DPS",    image:null, customIcon:"imbibitor_lunae", note:"Once S-tier hyper carry; still strong but SP heavy." },
+    
+      { id:"moze",       name:"Moze",       element:"Lightning", path:"The Hunt",    rarity:4, role:"Sub-DPS", image:null, customIcon:"moze",       note:"Prey mark follow-up; nearly essential in Feixiao teams." },
+    
+      { id:"march7th_hunt", name:"March 7th (Hunt)", element:"Imaginary", path:"The Hunt", rarity:4, role:"Sub-DPS", image:null, customIcon:"march7th_hunt", note:"Hunt-path March 7th is a top-tier follow-up Sub-DPS." },
+    
+      { id:"yao_guang",        name:"Yao Guang",        element:"Physical",       path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"yao_guang",        note:"Ice Nihility support; great pairing with Acheron or DoT teams." },
+    
+      { id:"the_dhalia",       name:"The Dhalia",       element:"Fire",      path:"Abundance",   rarity:5, role:"Healer",  image:null, customIcon:"the_dhalia",       note:"Wind healer — strong synergy with DoT and Nihility teams." },
+    
+      { id:"cipher",           name:"Cipher",           element:"Quantum",   path:"Harmony",     rarity:5, role:"Support", image:null, customIcon:"cipher",           note:"Quantum Harmony support enabling quantum carry teams." },
+    ]
+  },
+  {
+    tier: "A", label: "Decent — Situational",
+    color: "#50b0ff", bg: "rgba(50,140,255,0.05)", border: "rgba(50,140,255,0.22)",
+    characters: [
+      { id:"seele",      name:"Seele",       element:"Quantum",   path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"seele",  note:"Once queen; modern HP pools reduce Resurgence value." },
+      { id:"gepard",     name:"Gepard",      element:"Ice",       path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"gepard",  note:"F2P reliable tank; team shield ult still strong." },
+      { id:"argenti",    name:"Argenti",     element:"Physical",  path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"argenti",  note:"AoE powerhouse; good in Pure Fiction with SP." },
+      { id:"gallagher",  name:"Gallagher",   element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"gallagher",  note:"Best F2P healer for break teams; essential with Firefly." },
+      { id:"himeko",     name:"Himeko",      element:"Fire",      path:"Erudition",   rarity:5, role:"DPS",     image:null, customIcon:"himeko",  note:"Pure Fiction specialist; weaker in MoC." },
+      { id:"pela",       name:"Pela",        element:"Ice",       path:"Nihility",    rarity:4, role:"Support", image:null, customIcon:"pela",  note:"Free DEF shredder; great budget support." },
+      { id:"tingyun",    name:"Tingyun",     element:"Lightning", path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"tingyun",  note:"Solid energy refund support; still viable but outclassed." },
+      { id:"sampo",      name:"Sampo",       element:"Wind",      path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"sampo",   note:"Wind DoT spreader; useful in Kafka/Black Swan teams." },
+      { id:"lynx",       name:"Lynx",        element:"Quantum",   path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"lynx",    note:"F2P sustain; replaces Natasha/Bailu for survival teams." },
+    
+      { id:"trailblazer_fire", name:"TB (Fire)", element:"Fire", path:"Preservation", rarity:5, role:"Tank", image:null, customIcon:"trailblazer_fire", note:"Fire TB tank with taunt; useful in fire break comps." },
+    
+      { id:"hanya",    name:"Hanya",     element:"Physical",  path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"hanya",     note:"F2P speed buffer; solid budget alternative to Bronya." },
+    
+      { id:"trailblazer_remembrance", name:"TB (Rem.)", element:"Ice", path:"Remembrance", rarity:5, role:"Support", image:null, customIcon:"trailblazer_remembrance", note:"Remembrance TB — essential for Cerydra & Aglaea teams." },
+    
+      { id:"permansor_terrae", name:"Permansor Terrae", element:"Physical",      path:"Preservation",rarity:5, role:"Tank",    image:null, customIcon:"permansor_terrae", note:"Fire break tank — good in Firefly and break comps." },
+    
+      { id:"evernight",        name:"Evernight",        element:"Ice",   path:"Nihility",    rarity:5, role:"Support", image:null, customIcon:"evernight",        note:"Quantum debuffer for Nihility teams; solid but situational." },
+    
+      { id:"sparxie",          name:"Sparxie",          element:"Fire",      path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"sparxie",          note:"4-star Fire healer; decent break support for fire teams." },
+    ]
+  },
+  {
+    tier: "B", label: "Niche — Early Game",
+    color: "#9090a0", bg: "rgba(100,100,140,0.05)", border: "rgba(100,100,140,0.2)",
+    characters: [
+      { id:"clara",      name:"Clara",       element:"Physical",  path:"Destruction", rarity:5, role:"DPS",     image:null, customIcon:"clara",  note:"Counter fun but heavily outclassed by Yunli." },
+      { id:"march7th",   name:"March 7th",   element:"Ice",       path:"Preservation",rarity:4, role:"Tank",    image:null, customIcon:"march7th",  note:"Shield + freeze utility; fine for early game." },
+      { id:"dan_heng",   name:"Dan Heng",    element:"Wind",      path:"The Hunt",    rarity:4, role:"DPS",     image:null, customIcon:"dan_heng", note:"Starter DPS; perfectly fine until you get 5-star Hunt units." },
+      { id:"bailu",      name:"Bailu",       element:"Lightning", path:"Abundance",   rarity:5, role:"Healer",  image:"https://api.hakush.in/hsr/UI/avatarshopicon/1204.webp",  note:"Revival is unique but lacks cleanse; outpaced by Huohuo." },
+      { id:"serval",     name:"Serval",      element:"Lightning", path:"Erudition",   rarity:4, role:"DPS",     image:null, customIcon:"serval",  note:"Fun for DoT AoE; better options exist at this point." },
+      { id:"trailblazer_harmony", name:"TB (Harmony)", element:"Imaginary", path:"Harmony", rarity:5, role:"Support", image:null, customIcon:"trailblazer_harmony", note:"Was S-tier; new units powercreep its break support role." },
+      { id:"natasha",    name:"Natasha",     element:"Physical",  path:"Abundance",   rarity:4, role:"Healer",  image:null, customIcon:"natasha",  note:"No cleanse, no offensive value; fully replaced by Lynx." },
+      { id:"asta",       name:"Asta",        element:"Fire",      path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"serval",  note:"Speed buff is nice; crowded harmony slot." },
+          { id:"arlan",    name:"Arlan",       element:"Lightning", path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"arlan", note:"Free starter DPS; HP drain is risky without good sustain." },
+    
+      { id:"qingque",  name:"Qingque",  element:"Quantum",  path:"Erudition",   rarity:4, role:"DPS",    image:null, customIcon:"qingque",  note:"Fun quantum AoE, good in Pure Fiction; heavy SP cost." },
+    
+      { id:"sushang",  name:"Sushang",  element:"Physical", path:"The Hunt",    rarity:4, role:"DPS",    image:null, customIcon:"sushang",  note:"Decent F2P physical DPS; outclassed by 5-star Hunt units." },
+    
+      { id:"hook",     name:"Hook",     element:"Fire",     path:"Destruction", rarity:4, role:"DPS",    image:null, customIcon:"hook",     note:"Fun fire DPS with DoT; low ceiling compared to meta options." },
+    
+      { id:"herta",    name:"Herta",    element:"Ice",      path:"Erudition",   rarity:4, role:"DPS",    image:null, customIcon:"herta",    note:"Ice follow-up DPS; solid early but outpaced now." },
+    
+      { id:"trailblazer_physical", name:"TB (Phys)", element:"Physical", path:"Destruction", rarity:5, role:"DPS", image:null, customIcon:"trailblazer_physical", note:"The original TB; sentimental but fully outclassed." },
+    
+      { id:"guinaifen",name:"Guinaifen", element:"Fire",      path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"guinaifen", note:"DoT enabler; outclassed but functional in Kafka teams." },
+    
+      { id:"luka",     name:"Luka",      element:"Physical",  path:"Nihility",    rarity:4, role:"Sub-DPS", image:null, customIcon:"luka",      note:"Physical DoT; niche role, limited team slots." },
+    
+      { id:"yukong",   name:"Yukong",    element:"Imaginary", path:"Harmony",     rarity:4, role:"Support", image:null, customIcon:"yukong",    note:"Imaginary buffer; too SP costly for most teams." },
+    
+      { id:"yangqing", name:"Yanqing",   element:"Ice",       path:"The Hunt",    rarity:5, role:"DPS",     image:null, customIcon:"yangqing",  note:"Ice DPS but loses stacks when hit; fragile and outclassed." },
+    
+      { id:"welt",     name:"Welt",      element:"Imaginary", path:"Nihility",    rarity:5, role:"Sub-DPS", image:null, customIcon:"welt",       note:"Slow debuffer; utility niche but damage is low now." },
+    
+      { id:"xueyi",    name:"Xueyi",     element:"Quantum",   path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"xueyi",     note:"Quantum DPS good for toughness; replaces nothing in endgame." },
+    
+      { id:"misha",            name:"Misha",            element:"Ice",       path:"Destruction", rarity:4, role:"DPS",     image:null, customIcon:"misha",            note:"Ice DPS with freeze utility; fine early, outclassed later." },
+    ]
+  },
+];
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState("advisor"); // "advisor" | "tierlist"
+  const [owned, setOwned] = useState([]);
+  const [wishes, setWishes] = useState(0);
+  const [pity, setPity] = useState(0);
+  const [guaranteed, setGuaranteed] = useState(false);
+  const [results, setResults] = useState(null);
+  const [step, setStep] = useState("setup");
+  const [imgErrors, setImgErrors] = useState({});
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [hoveredChar, setHoveredChar] = useState(null);
+  const [tlMode, setTlMode] = useState("All"); // tier list filter
+
+  // Helper: get image src for a character
+  const getImg = (char) => {
+    // Prefer uploaded custom icon, then remote URL fallback
+    if (char.customIcon && CUSTOM_ICONS[char.customIcon]) return CUSTOM_ICONS[char.customIcon];
+    if (char.image) return char.image;
+    // Remote fallback map for chars without image field
+    const remoteFallbacks = {
+      lynx: "https://api.hakush.in/hsr/UI/avatarshopicon/1303.webp",
+      trailblazer_ice: "https://api.hakush.in/hsr/UI/avatarshopicon/8008.webp",
+      dan_heng: "https://api.hakush.in/hsr/UI/avatarshopicon/1002.webp",
+      cerydra: "https://api.hakush.in/hsr/UI/avatarshopicon/1406.webp",
+      sampo: "https://api.hakush.in/hsr/UI/avatarshopicon/1110.webp",
+      bronya: "https://api.hakush.in/hsr/UI/avatarshopicon/1101.webp",
+      bailu: "https://api.hakush.in/hsr/UI/avatarshopicon/1204.webp",
+      asta: "https://api.hakush.in/hsr/UI/avatarshopicon/1009.webp",
+      arlan: "https://api.hakush.in/hsr/UI/avatarshopicon/1008.webp",
+      huohuo: "https://api.hakush.in/hsr/UI/avatarshopicon/1217.webp",
+      sunday: "https://api.hakush.in/hsr/UI/avatarshopicon/1313.webp",
+      phainon: "https://api.hakush.in/hsr/UI/avatarshopicon/1404.webp",
+      blade: "https://api.hakush.in/hsr/UI/avatarshopicon/1205.webp",
+      trailblazer_harmony: "https://api.hakush.in/hsr/UI/avatarshopicon/8008.webp",
+      trailblazer_fire: "https://api.hakush.in/hsr/UI/avatarshopicon/8008.webp",
+      trailblazer_physical: "https://api.hakush.in/hsr/UI/avatarshopicon/8008.webp",
+      trailblazer_remembrance: "https://api.hakush.in/hsr/UI/avatarshopicon/8008.webp",
+      tingyun: "https://api.hakush.in/hsr/UI/avatarshopicon/1202.webp",
+      sushang: "https://api.hakush.in/hsr/UI/avatarshopicon/1206.webp",
+      silver_wolf: "https://api.hakush.in/hsr/UI/avatarshopicon/1006.webp",
+      serval: "https://api.hakush.in/hsr/UI/avatarshopicon/1009.webp",
+      seele: "https://api.hakush.in/hsr/UI/avatarshopicon/1102.webp",
+      qingque: "https://api.hakush.in/hsr/UI/avatarshopicon/1201.webp",
+      pela: "https://api.hakush.in/hsr/UI/avatarshopicon/1106.webp",
+      natasha: "https://api.hakush.in/hsr/UI/avatarshopicon/1105.webp",
+      march7th: "https://api.hakush.in/hsr/UI/avatarshopicon/1001.webp",
+      luocha: "https://api.hakush.in/hsr/UI/avatarshopicon/1211.webp",
+      kafka: "https://api.hakush.in/hsr/UI/avatarshopicon/1005.webp",
+      jing_yuan: "https://api.hakush.in/hsr/UI/avatarshopicon/1207.webp",
+      hook: "https://api.hakush.in/hsr/UI/avatarshopicon/1109.webp",
+      himeko: "https://api.hakush.in/hsr/UI/avatarshopicon/1003.webp",
+      herta: "https://api.hakush.in/hsr/UI/avatarshopicon/1013.webp",
+      gepard: "https://api.hakush.in/hsr/UI/avatarshopicon/1104.webp",
+      fu_xuan: "https://api.hakush.in/hsr/UI/avatarshopicon/1208.webp",
+      clara: "https://api.hakush.in/hsr/UI/avatarshopicon/1107.webp",
+      argenti: "https://api.hakush.in/hsr/UI/avatarshopicon/1214.webp",
+      guinaifen: "https://api.hakush.in/hsr/UI/avatarshopicon/1210.webp",
+      topaz: "https://api.hakush.in/hsr/UI/avatarshopicon/1218.webp",
+      jingliu: "https://api.hakush.in/hsr/UI/avatarshopicon/1212.webp",
+      imbibitor_lunae: "https://api.hakush.in/hsr/UI/avatarshopicon/1213.webp",
+      luka: "https://api.hakush.in/hsr/UI/avatarshopicon/1203.webp",
+      yukong: "https://api.hakush.in/hsr/UI/avatarshopicon/1209.webp",
+      yangqing: "https://api.hakush.in/hsr/UI/avatarshopicon/1103.webp",
+      welt: "https://api.hakush.in/hsr/UI/avatarshopicon/1004.webp",
+      sparkle: "https://api.hakush.in/hsr/UI/avatarshopicon/1306.webp",
+      black_swan: "https://api.hakush.in/hsr/UI/avatarshopicon/1307.webp",
+      xueyi: "https://api.hakush.in/hsr/UI/avatarshopicon/1215.webp",
+      dr_ratio: "https://api.hakush.in/hsr/UI/avatarshopicon/1224.webp",
+      ruan_mei: "https://api.hakush.in/hsr/UI/avatarshopicon/1223.webp",
+      hanya: "https://api.hakush.in/hsr/UI/avatarshopicon/1216.webp",
+      feixiao: "https://api.hakush.in/hsr/UI/avatarshopicon/1310.webp",
+      jade: "https://api.hakush.in/hsr/UI/avatarshopicon/1314.webp",
+      firefly: "https://api.hakush.in/hsr/UI/avatarshopicon/1222.webp",
+      boothill: "https://api.hakush.in/hsr/UI/avatarshopicon/1221.webp",
+      robin: "https://api.hakush.in/hsr/UI/avatarshopicon/1309.webp",
+      gallagher: "https://api.hakush.in/hsr/UI/avatarshopicon/1301.webp",
+      jiaoqiu: "https://api.hakush.in/hsr/UI/avatarshopicon/1315.webp",
+      yunli: "https://api.hakush.in/hsr/UI/avatarshopicon/1312.webp",
+      aventurine: "https://api.hakush.in/hsr/UI/avatarshopicon/1304.webp",
+      acheron: "https://api.hakush.in/hsr/UI/avatarshopicon/1308.webp",
+      anaxa: "https://api.hakush.in/hsr/UI/avatarshopicon/1407.webp",
+      castorice: "https://api.hakush.in/hsr/UI/avatarshopicon/1402.webp",
+      mydei: "https://api.hakush.in/hsr/UI/avatarshopicon/1403.webp",
+      tribbie: "https://api.hakush.in/hsr/UI/avatarshopicon/1401.webp",
+      aglaea: "https://api.hakush.in/hsr/UI/avatarshopicon/1405.webp",
+      the_herta: "https://api.hakush.in/hsr/UI/avatarshopicon/1400.webp",
+      fugue: "https://api.hakush.in/hsr/UI/avatarshopicon/1316.webp",
+      rappa: "https://api.hakush.in/hsr/UI/avatarshopicon/1317.webp",
+      moze: "https://api.hakush.in/hsr/UI/avatarshopicon/1311.webp",
+      lingsha: "https://api.hakush.in/hsr/UI/avatarshopicon/1319.webp",
+      march7th_hunt: "https://api.hakush.in/hsr/UI/avatarshopicon/1001.webp",
+      misha: "https://api.hakush.in/hsr/UI/avatarshopicon/1220.webp",
+    };
+    return remoteFallbacks[char.customIcon] || remoteFallbacks[char.id] || null;
+  };
+
+  const filteredChars = useMemo(() => {
+    return CHARACTERS.filter(c => {
+      const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
+      const matchFilter = filter === "All" || c.element === filter || c.path === filter || c.role === filter;
+      return matchSearch && matchFilter;
+    });
+  }, [search, filter]);
+
+  const toggleOwned = (id) => setOwned(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const analyze = async () => {
+    setAnalyzing(true); setStep("loading");
+    await new Promise(r => setTimeout(r, 1600));
+    const ownedSet = new Set(owned);
+    const ownedChars = CHARACTERS.filter(c => ownedSet.has(c.id));
+    const roles = { DPS: 0, "Sub-DPS": 0, Support: 0, Healer: 0, Tank: 0 };
+    ownedChars.forEach(c => { if (roles[c.role] !== undefined) roles[c.role]++; });
+    const elements = {};
+    ownedChars.forEach(c => { elements[c.element] = (elements[c.element] || 0) + 1; });
+    const missingRoles = Object.entries(roles).filter(([,v]) => v === 0).map(([k]) => k);
+    const wn = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
+
+    // ── Score upcoming banners ──────────────────────────────────────────────
+    const scored = UPCOMING_BANNERS.map(banner => {
+      const char = CHARACTERS.find(c => c.id === banner.character);
+      if (!char) return { ...banner, char, score: 0, verdict:"skip", reasons:[], pullAdvice:"", eidolonAdvice:"" };
+      let score = 0;
+      const alreadyOwned = ownedSet.has(char.id);
+      const synergiesOwned = (char.synergies || []).filter(s => ownedSet.has(s));
+      const synNames = synergiesOwned.map(s => CHARACTERS.find(c=>c.id===s)?.name).filter(Boolean);
+
+      // Score logic
+      if (!alreadyOwned) {
+        if (char.role === "DPS" && roles.DPS === 0) score += 40;
+        else if (char.role === "DPS") score += 20;
+        if (char.role === "Healer" && roles.Healer === 0) score += 35;
+        if (char.role === "Support" && roles.Support < 2) score += 30;
+        if (char.role === "Tank" && roles.Tank === 0) score += 30;
+        if (missingRoles.includes(char.role)) score += 20;
+        score += synergiesOwned.length * 20;
+        if (wishes >= wn) score += 15;
+        else score -= 15;
+        // Tier bonus
+        if (banner.tier === "SS") score += 25;
+        else if (banner.tier === "SS+") score += 20;
+        else if (banner.tier === "S") score += 10;
+      } else {
+        // Owned — eidolon value assessment
+        score = 20; // base eidolon pull score
+        if (synergiesOwned.length >= 2) score += 15;
+        if (wishes >= wn) score += 10;
+        else score -= 20;
+      }
+
+      // Build pull advice text
+      let pullAdvice = "";
+      let verdict = score >= 60 ? "must" : score >= 35 ? "consider" : "skip";
+
+      if (alreadyOwned) {
+        verdict = "eidolon";
+        pullAdvice = `You already own ${char.name}. Pulling duplicates gives Eidolons — see below for whether they're worth it.`;
+      } else {
+        if (verdict === "must") {
+          pullAdvice = banner.whyPull || `${char.name} fills a critical gap in your roster and has strong meta value.`;
+        } else if (verdict === "consider") {
+          pullAdvice = synNames.length > 0
+            ? `${char.name} synergizes with ${synNames.join(", ")} you already own, which increases their value. ${banner.whyPull || ""}`
+            : (banner.whyPull || `${char.name} is a solid pick but not urgent given your current roster.`);
+        } else {
+          pullAdvice = banner.whySkip || `Your roster already covers ${char.role} well. Consider saving wishes for a future banner.`;
+        }
+      }
+
+      // Wishes feasibility note
+      const wishNote = wishes >= wn
+        ? `You have enough wishes (need ~${wn}, have ${wishes}).`
+        : `You may not have enough wishes — need ~${wn} but only have ${wishes}. Save more before pulling.`;
+
+      // Team tip
+      const teamNote = banner.teamTip ? `Team: ${banner.teamTip}` : "";
+
+      // Synergy note
+      const synergyNote = synNames.length > 0
+        ? `Works great with your: ${synNames.join(", ")}.`
+        : "You don't own their best synergy partners yet — consider their team requirements.";
+
+      return {
+        ...banner, char, score, verdict,
+        pullAdvice, wishNote, teamNote, synergyNote,
+        eidolonNotes: banner.eidolonNotes || [],
+        alreadyOwned,
+      };
+    });
+    scored.sort((a, b) => b.score - a.score);
+
+    // ── Score owned characters for "should I E1/E2?" advice ─────────────────
+    const ownedAdvice = ownedChars
+      .filter(c => c.rarity === 5)
+      .map(c => {
+        const syns = (c.synergies||[]).filter(s => ownedSet.has(s));
+        const tierEntry = TIER_LIST.flatMap(t => t.characters).find(tc => tc.id === c.id);
+        const tier = TIER_LIST.find(t => t.characters.some(tc => tc.id === c.id))?.tier || "?";
+        return {
+          ...c,
+          tier,
+          note: tierEntry?.note || c.desc,
+          synergyCount: syns.length,
+          synergyNames: syns.map(s=>CHARACTERS.find(ch=>ch.id===s)?.name).filter(Boolean),
+        };
+      })
+      .sort((a,b) => {
+        const tierOrder = {"SS":0,"SS+":1,"S":2,"S-":3,"A":4,"B":5,"?":6};
+        return (tierOrder[a.tier]??6) - (tierOrder[b.tier]??6);
+      });
+
+    setResults({ scored, roles, elements, missingRoles, ownedAdvice, wishesNeeded: wn });
+    setStep("results"); setAnalyzing(false);
+  };
+
+const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
+  const canAnalyze = owned.length > 0 || wishes > 0;
+
+  // ── Shared styles ──────────────────────────────────────────────────────────
+  const panelStyle = {
+    background: "linear-gradient(135deg, rgba(20,25,60,0.92) 0%, rgba(15,20,50,0.92) 100%)",
+    border: "1px solid rgba(80,100,200,0.3)", borderRadius: 16,
+    padding: "28px 32px", backdropFilter: "blur(10px)",
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <div style={{ minHeight:"100vh", background:"#050812", fontFamily:"'Rajdhani', 'Orbitron', monospace", color:"#e8e8f0", position:"relative", overflow:"hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;600;800&display=swap');
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a0d1a}::-webkit-scrollbar-thumb{background:#3a4080;border-radius:4px}
+        .char-card{transition:all .22s cubic-bezier(.34,1.56,.64,1);cursor:pointer;position:relative}
+        .char-card:hover{transform:translateY(-4px) scale(1.04)}
+        .char-card.owned{box-shadow:0 0 18px rgba(120,200,255,.4)}
+        .glow-btn{transition:all .18s ease;cursor:pointer;border:none}
+        .glow-btn:hover{filter:brightness(1.2);transform:translateY(-1px)}
+        .glow-btn:active{transform:translateY(0)}
+        .filter-pill{transition:all .15s ease;cursor:pointer;white-space:nowrap}
+        .filter-pill:hover{filter:brightness(1.3)}
+        .tl-card{transition:all .2s ease;cursor:default}
+        .tl-char{transition:transform .18s ease;cursor:pointer;position:relative}
+        .tl-char:hover{transform:scale(1.08) translateY(-3px)}
+        @keyframes pulse-glow{0%,100%{opacity:.6}50%{opacity:1}}
+        @keyframes slideIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .result-card{animation:slideIn .38s ease forwards}
+        .result-card:nth-child(2){animation-delay:.1s;opacity:0}
+        .result-card:nth-child(3){animation-delay:.2s;opacity:0}
+      `}</style>
+
+      {/* BG */}
+      <div style={{ position:"fixed",inset:0,zIndex:0,backgroundImage:"linear-gradient(rgba(60,80,200,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(60,80,200,.04) 1px,transparent 1px)",backgroundSize:"60px 60px",pointerEvents:"none" }} />
+      <div style={{ position:"fixed",inset:0,zIndex:0,pointerEvents:"none" }}>
+        <div style={{ position:"absolute",top:"8%",left:"12%",width:400,height:400,borderRadius:"50%",background:"radial-gradient(circle,rgba(80,40,200,.12) 0%,transparent 70%)",animation:"pulse-glow 4s ease-in-out infinite" }} />
+        <div style={{ position:"absolute",bottom:"18%",right:"8%",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,rgba(40,160,220,.08) 0%,transparent 70%)",animation:"pulse-glow 6s ease-in-out infinite reverse" }} />
+      </div>
+
+      <div style={{ position:"relative",zIndex:1,maxWidth:1140,margin:"0 auto",padding:"0 20px 60px" }}>
+
+        {/* Header */}
+        <div style={{ textAlign:"center",padding:"44px 0 20px" }}>
+          <div style={{ fontSize:11,letterSpacing:6,color:"#6080c0",textTransform:"uppercase",marginBottom:10 }}>Interastral Peace Corporation</div>
+          <h1 style={{ fontSize:"clamp(30px,5.5vw,52px)",fontFamily:"Orbitron,monospace",fontWeight:800,margin:0,background:"linear-gradient(135deg,#a0c4ff 0%,#c8a0ff 40%,#ffa0c8 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:2 }}>WARP ADVISOR</h1>
+          <div style={{ marginTop:8,color:"#6080c0",fontSize:13,letterSpacing:2 }}>◆ HONKAI: STAR RAIL ◆ v4.0 META ◆</div>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display:"flex",gap:8,justifyContent:"center",marginBottom:32 }}>
+          {[["advisor","◈ Pull Advisor"],["tierlist","◆ Tier List"]].map(([id,label]) => (
+            <button key={id} className="glow-btn"
+              onClick={() => setTab(id)}
+              style={{
+                background: tab===id ? "linear-gradient(135deg,rgba(60,50,180,.5),rgba(100,30,160,.5))" : "rgba(20,28,70,.5)",
+                border: `1px solid ${tab===id ? "rgba(120,80,255,.6)" : "rgba(60,80,160,.3)"}`,
+                borderRadius:10,padding:"10px 28px",fontSize:14,letterSpacing:3,
+                color: tab===id ? "#d0c0ff" : "#5060a0",
+                fontFamily:"Orbitron,monospace",fontWeight:600,
+                boxShadow: tab===id ? "0 0 24px rgba(100,60,200,.3)" : "none",
+              }}
+            >{label}</button>
+          ))}
+        </div>
+
+        {/* ──────────────── PULL ADVISOR TAB ──────────────── */}
+        {tab === "advisor" && (
+          <div>
+            {step === "setup" && (
+              <div>
+                {/* Wishes & Pity */}
+                <div style={{ ...panelStyle, marginBottom:24 }}>
+                  <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",marginBottom:18,textTransform:"uppercase" }}>◆ Warp Resources</div>
+                  <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:22 }}>
+                    {[
+                      { label:"Wishes Available", val:wishes, set:setWishes, max:999, icon:"◆" },
+                      { label:"Current Pity",     val:pity,   set:setPity,   max:89,  icon:"◎" },
+                    ].map(({ label,val,set,max,icon }) => (
+                      <div key={label}>
+                        <div style={{ fontSize:12,color:"#8090b0",marginBottom:8,letterSpacing:1 }}>{icon} {label}</div>
+                        <div style={{ display:"flex",alignItems:"center",gap:12 }}>
+                          <input type="range" min={0} max={max} value={val} onChange={e=>set(Number(e.target.value))} style={{ flex:1,accentColor:"#7070ff",cursor:"pointer" }} />
+                          <div style={{ background:"rgba(80,100,220,.2)",border:"1px solid rgba(80,100,220,.4)",borderRadius:8,padding:"4px 12px",minWidth:46,textAlign:"center",fontFamily:"Orbitron",fontSize:14,color:"#c0d0ff" }}>{val}</div>
+                        </div>
+                      </div>
+                    ))}
+                    <div>
+                      <div style={{ fontSize:12,color:"#8090b0",marginBottom:8,letterSpacing:1 }}>◈ 50/50 Status</div>
+                      <button className="glow-btn" onClick={()=>setGuaranteed(!guaranteed)} style={{
+                        background: guaranteed ? "linear-gradient(135deg,rgba(80,200,120,.3),rgba(40,160,80,.3))" : "linear-gradient(135deg,rgba(200,80,80,.3),rgba(160,40,40,.3))",
+                        border:`1px solid ${guaranteed ? "rgba(80,200,120,.5)" : "rgba(200,80,80,.5)"}`,
+                        borderRadius:10,padding:"10px 20px",color:guaranteed?"#80ff80":"#ff8080",
+                        fontSize:13,letterSpacing:1,width:"100%",fontFamily:"Rajdhani",
+                      }}>{guaranteed ? "✓ GUARANTEED" : "◎ ON 50/50"}</button>
+                    </div>
+                  </div>
+                  {wishes > 0 && (
+                    <div style={{ marginTop:18,padding:"10px 16px",background:"rgba(80,100,220,.1)",borderRadius:10,border:"1px solid rgba(80,100,220,.2)",fontSize:13,color:"#a0b0d0" }}>
+                      ◆ With <strong style={{color:"#c0d0ff"}}>{wishes} wishes</strong> at pity <strong style={{color:"#c0d0ff"}}>{pity}</strong> {guaranteed?"(guaranteed)":"(50/50)"} — you can expect approximately <strong style={{color:"#ffd080"}}>{Math.floor(wishes/wishesNeeded)} guaranteed 5★</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Character selector */}
+                <div style={{ ...panelStyle }}>
+                  <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10 }}>
+                    <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",textTransform:"uppercase" }}>◆ Your Roster {owned.length>0&&<span style={{color:"#a0c0ff"}}>({owned.length} selected)</span>}</div>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{ background:"rgba(80,100,200,.1)",border:"1px solid rgba(80,100,200,.3)",borderRadius:8,padding:"7px 14px",color:"#e0e8ff",fontSize:13,outline:"none",fontFamily:"Rajdhani",width:170 }} />
+                  </div>
+                  <div style={{ display:"flex",gap:7,marginBottom:18,flexWrap:"wrap" }}>
+                    {["All","DPS","Support","Healer","Tank","Sub-DPS"].map(f => (
+                      <button key={f} className="filter-pill" onClick={()=>setFilter(f)} style={{ background:filter===f?"rgba(100,120,255,.3)":"rgba(40,50,100,.3)",border:`1px solid ${filter===f?"rgba(100,120,255,.6)":"rgba(60,80,140,.3)"}`,borderRadius:20,padding:"5px 13px",fontSize:12,color:filter===f?"#c0d0ff":"#6080a0",fontFamily:"Rajdhani",letterSpacing:1 }}>{f}</button>
+                    ))}
+                    <div style={{ width:1,background:"rgba(80,100,180,.3)",margin:"0 3px" }} />
+                    {["Fire","Ice","Wind","Lightning","Quantum","Imaginary","Physical"].map(el => {
+                      const ec=ELEMENT_COLORS[el];
+                      return <button key={el} className="filter-pill" onClick={()=>setFilter(el)} style={{ background:filter===el?`${ec.bg}30`:"rgba(40,50,100,.3)",border:`1px solid ${filter===el?ec.glow:"rgba(60,80,140,.3)"}`,borderRadius:20,padding:"5px 13px",fontSize:12,color:filter===el?ec.text:"#6080a0",fontFamily:"Rajdhani",letterSpacing:1 }}>{el}</button>;
+                    })}
+                  </div>
+
+                  <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(86px,1fr))",gap:9 }}>
+                    {filteredChars.map(char => {
+                      const isOwned=owned.includes(char.id); const el=ELEMENT_COLORS[char.element];
+                      const imgSrc = getImg(char);
+                      return (
+                        <div key={char.id} className={`char-card ${isOwned?"owned":""}`} onClick={()=>toggleOwned(char.id)} onMouseEnter={()=>setHoveredChar(char.id)} onMouseLeave={()=>setHoveredChar(null)} style={{ borderRadius:12,overflow:"hidden",border:isOwned?`2px solid ${el.glow}`:"2px solid rgba(60,80,140,.4)",background:isOwned?`linear-gradient(180deg,${el.bg}20 0%,${el.bg}10 100%)`:"rgba(20,28,60,.6)" }}>
+                          <div style={{ height:3,background:el.bg,opacity:isOwned?1:.3 }} />
+                          <div style={{ background:isOwned?`${el.bg}15`:"rgba(10,15,40,.8)",padding:"7px 7px 3px",textAlign:"center" }}>
+                            {imgSrc && !imgErrors[char.id] ? (
+                              <img src={imgSrc} alt={char.name} onError={()=>setImgErrors(prev=>({...prev,[char.id]:true}))} style={{ width:58,height:58,objectFit:"cover",borderRadius:8,filter:isOwned?"none":"grayscale(60%) brightness(.7)" }} />
+                            ) : (
+                              <div style={{ width:58,height:58,borderRadius:8,background:`${el.bg}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto" }}>{PATH_ICONS[char.path]||"?"}</div>
+                            )}
+                          </div>
+                          <div style={{ padding:"3px 5px 7px",textAlign:"center" }}>
+                            <div style={{ fontSize:10,fontWeight:600,color:isOwned?"#e0eaff":"#6070a0",letterSpacing:.4,lineHeight:1.2 }}>{char.name}</div>
+                            <div style={{ fontSize:9,color:el.glow,marginTop:2 }}>{char.element}</div>
+                          </div>
+                          {isOwned && <div style={{ position:"absolute",top:5,right:5,width:17,height:17,borderRadius:"50%",background:el.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10 }}>✓</div>}
+                          {hoveredChar===char.id && (
+                            <div style={{ position:"absolute",bottom:"106%",left:"50%",transform:"translateX(-50%)",background:"rgba(8,12,30,.97)",border:`1px solid ${el.glow}40`,borderRadius:8,padding:"9px 12px",width:175,zIndex:100,fontSize:11,color:"#b0c0e0",lineHeight:1.5,pointerEvents:"none" }}>
+                              <div style={{ fontWeight:700,color:el.glow,marginBottom:3,fontSize:12 }}>{char.name}</div>
+                              <div style={{ color:"#6080a0",marginBottom:3 }}>{PATH_ICONS[char.path]||"◈"} {char.path} · {char.role} · {char.rarity}★</div>
+                              <div>{char.desc}</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {filteredChars.length===0 && <div style={{ gridColumn:"1/-1",textAlign:"center",padding:36,color:"#4060a0" }}>No characters found</div>}
+                  </div>
+                </div>
+
+                <div style={{ textAlign:"center",marginTop:28 }}>
+                  <button className="glow-btn" onClick={analyze} disabled={!canAnalyze} style={{ background:canAnalyze?"linear-gradient(135deg,#4040c0 0%,#6020a0 50%,#8030c0 100%)":"rgba(40,50,80,.4)",border:canAnalyze?"1px solid rgba(120,80,255,.6)":"1px solid rgba(40,50,80,.4)",borderRadius:14,padding:"15px 44px",fontSize:16,letterSpacing:3,textTransform:"uppercase",color:canAnalyze?"#e0d0ff":"#304060",fontFamily:"Orbitron,monospace",fontWeight:600,boxShadow:canAnalyze?"0 0 36px rgba(100,60,200,.4)":"none",opacity:canAnalyze?1:.5 }}>◈ ANALYZE WARPS ◈</button>
+                  {!canAnalyze && <div style={{ marginTop:10,color:"#304060",fontSize:12,letterSpacing:1 }}>Select characters you own or enter your wish count</div>}
+                </div>
+              </div>
+            )}
+
+            {step === "loading" && (
+              <div style={{ textAlign:"center",padding:"80px 20px" }}>
+                <div style={{ width:76,height:76,margin:"0 auto 28px",border:"2px solid rgba(80,100,220,.2)",borderTop:"2px solid #a080ff",borderRadius:"50%",animation:"spin 1s linear infinite" }} />
+                <div style={{ fontFamily:"Orbitron",fontSize:15,color:"#a080ff",letterSpacing:3 }}>CALCULATING FATE</div>
+                <div style={{ marginTop:10,color:"#4060a0",fontSize:12,letterSpacing:2 }}>Consulting the Astral Express...</div>
+              </div>
+            )}
+
+            {step === "results" && results && (
+              <div>
+                <button className="glow-btn" onClick={()=>setStep("setup")} style={{ background:"rgba(40,50,100,.3)",border:"1px solid rgba(60,80,160,.4)",borderRadius:8,padding:"8px 18px",color:"#6080c0",fontSize:12,letterSpacing:2,fontFamily:"Rajdhani",marginBottom:22 }}>← BACK TO SETUP</button>
+
+                {/* Summary row */}
+                <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:28 }}>
+                  {[
+                    { label:"Roster Size",     value:owned.length,           color:"#a0c0ff", icon:"◈" },
+                    { label:"Wishes",           value:wishes,                 color:"#ffd080", icon:"◆" },
+                    { label:"Missing Roles",    value:results.missingRoles.length===0?"Complete!":results.missingRoles.join(", "), color:results.missingRoles.length===0?"#80ff80":"#ff8080", icon:"◎" },
+                    { label:"50/50 Status",     value:guaranteed?"Guaranteed":"On 50/50", color:guaranteed?"#80ff80":"#ffa060", icon:"◇" },
+                  ].map(({label,value,color,icon})=>(
+                    <div key={label} style={{ background:"rgba(20,28,60,.8)",border:"1px solid rgba(60,80,160,.3)",borderRadius:12,padding:"12px 16px" }}>
+                      <div style={{ fontSize:11,color:"#5070a0",letterSpacing:1,marginBottom:4 }}>{icon} {label}</div>
+                      <div style={{ fontSize:16,fontFamily:"Orbitron",color,fontWeight:600 }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── UPCOMING BANNERS ── */}
+                <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",textTransform:"uppercase",marginBottom:16 }}>◆ Upcoming Banner Recommendations</div>
+
+                {results.scored.map((banner,i)=>{
+                  const char = banner.char; if(!char) return null;
+                  const el = ELEMENT_COLORS[char.element]||ELEMENT_COLORS.Physical;
+                  const imgSrc = getImg(char);
+                  const verdictConfig = {
+                    must:    { label:"★ MUST PULL",   color:"#ffd700", bg:"rgba(255,210,0,.12)",  border:"rgba(255,210,0,.4)" },
+                    consider:{ label:"◇ CONSIDER",    color:"#80c0ff", bg:"rgba(80,160,255,.08)", border:"rgba(80,160,255,.3)" },
+                    skip:    { label:"✗ SKIP",        color:"#ff6060", bg:"rgba(255,60,60,.06)",  border:"rgba(255,60,60,.25)" },
+                    eidolon: { label:"◈ EIDOLONS?",   color:"#c080ff", bg:"rgba(160,80,255,.08)", border:"rgba(160,80,255,.3)" },
+                  }[banner.verdict] || { label:"—", color:"#666", bg:"transparent", border:"rgba(60,80,160,.3)" };
+
+                  return (
+                    <div key={banner.id} className="result-card" style={{ background:`linear-gradient(135deg,rgba(20,28,60,.97),rgba(15,22,50,.97))`,border:`1px solid ${i===0&&banner.verdict==="must"?el.glow+"70":verdictConfig.border}`,borderRadius:16,padding:"24px 28px",marginBottom:20,backdropFilter:"blur(10px)",position:"relative",overflow:"hidden" }}>
+                      {i===0 && banner.verdict!=="skip" && <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${el.glow},transparent)` }} />}
+
+                      {/* Header row */}
+                      <div style={{ display:"flex",gap:20,alignItems:"flex-start",flexWrap:"wrap" }}>
+                        {/* Portrait */}
+                        <div style={{ flexShrink:0 }}>
+                          <div style={{ width:86,height:86,borderRadius:13,border:`2px solid ${el.glow}70`,overflow:"hidden",background:`linear-gradient(180deg,${el.bg}30,${el.bg}08)`,boxShadow:`0 0 20px ${el.bg}40` }}>
+                            {imgSrc&&!imgErrors["r_"+char.id]?<img src={imgSrc} alt={char.name} onError={()=>setImgErrors(p=>({...p,["r_"+char.id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32}}>{PATH_ICONS[char.path]||"◈"}</div>}
+                          </div>
+                          <div style={{ marginTop:6,textAlign:"center",fontSize:9,color:"#4060a0" }}>{banner.type}</div>
+                        </div>
+
+                        {/* Main info */}
+                        <div style={{ flex:1,minWidth:200 }}>
+                          <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6,flexWrap:"wrap" }}>
+                            <div style={{ fontFamily:"Orbitron",fontSize:20,color:"#e8eaff",fontWeight:600 }}>{char.name}</div>
+                            <div style={{ fontSize:11,color:verdictConfig.color,letterSpacing:2,fontWeight:700,background:verdictConfig.bg,border:`1px solid ${verdictConfig.border}`,borderRadius:6,padding:"2px 10px" }}>{verdictConfig.label}</div>
+                            {banner.tier && <div style={{ fontSize:11,color:"#a0b0d0",background:"rgba(60,70,120,.4)",border:"1px solid rgba(80,100,180,.3)",borderRadius:6,padding:"2px 8px" }}>Tier {banner.tier}</div>}
+                          </div>
+                          <div style={{ display:"flex",gap:6,marginBottom:10,flexWrap:"wrap" }}>
+                            {[{l:char.element,c:el.bg,t:el.text},{l:char.path,c:"rgba(80,80,140,.4)",t:"#a0b0d0"},{l:char.role,c:"rgba(60,100,80,.4)",t:"#80c0a0"},{l:"5★",c:"rgba(120,80,20,.4)",t:"#ffd080"}].map(({l,c,t})=><span key={l} style={{background:c,borderRadius:6,padding:"2px 9px",fontSize:11,color:t,letterSpacing:1}}>{l}</span>)}
+                          </div>
+
+                          {/* Pull advice */}
+                          <div style={{ fontSize:13,color:"#c0cce8",lineHeight:1.6,marginBottom:10,padding:"10px 14px",background:"rgba(40,60,120,.15)",borderRadius:8,border:"1px solid rgba(60,80,160,.2)",borderLeft:`3px solid ${verdictConfig.color}` }}>
+                            {banner.pullAdvice}
+                          </div>
+
+                          {/* Info pills */}
+                          <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
+                            <div style={{ fontSize:12,color:"#7090b0",display:"flex",gap:8,alignItems:"flex-start" }}>
+                              <span style={{color:"#5080a0",flexShrink:0}}>◆</span>
+                              <span>{banner.synergyNote}</span>
+                            </div>
+                            <div style={{ fontSize:12,color:"#7090b0",display:"flex",gap:8,alignItems:"flex-start" }}>
+                              <span style={{color:"#5080a0",flexShrink:0}}>◎</span>
+                              <span>{banner.wishNote}</span>
+                            </div>
+                            {banner.teamNote && (
+                              <div style={{ fontSize:12,color:"#7090b0",display:"flex",gap:8,alignItems:"flex-start" }}>
+                                <span style={{color:"#5080a0",flexShrink:0}}>◈</span>
+                                <span>{banner.teamNote}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Score */}
+                        <div style={{ flexShrink:0,textAlign:"center" }}>
+                          <div style={{ fontSize:9,color:"#4060a0",letterSpacing:1,marginBottom:6 }}>PULL SCORE</div>
+                          <div style={{ width:64,height:64,borderRadius:"50%",border:`2px solid ${banner.score>=60?el.glow:banner.score>=35?"#8080c0":"#503050"}`,display:"flex",alignItems:"center",justifyContent:"center",background:`${banner.score>=60?el.bg:"#181828"}20`,boxShadow:banner.score>=60?`0 0 16px ${el.bg}50`:"none" }}>
+                            <div style={{ fontFamily:"Orbitron",fontSize:18,fontWeight:800,color:banner.score>=60?el.glow:banner.score>=35?"#7070c0":"#503060" }}>{Math.max(0,Math.min(99,banner.score))}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Eidolon breakdown */}
+                      {banner.eidolonNotes && banner.eidolonNotes.length > 0 && (
+                        <div style={{ marginTop:16,padding:"12px 16px",background:"rgba(100,60,200,.07)",border:"1px solid rgba(120,60,220,.2)",borderRadius:10 }}>
+                          <div style={{ fontSize:10,letterSpacing:3,color:"#8060c0",marginBottom:8,textTransform:"uppercase" }}>Eidolon Value</div>
+                          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:6 }}>
+                            {banner.eidolonNotes.map((note,ni)=>(
+                              <div key={ni} style={{ fontSize:11,color:"#9090b8",display:"flex",gap:8,alignItems:"flex-start",padding:"4px 0" }}>
+                                <span style={{ color:ni<=1?"#c080ff":ni===2?"#9060d0":"#5040808",fontWeight:700,flexShrink:0,fontFamily:"Orbitron",fontSize:10 }}>E{ni}</span>
+                                <span style={{ color:ni===0?"#d0c0f8":ni<=2?"#a090d0":"#605080" }}>{note.split(" — ").slice(1).join(" — ") || note}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* ── OWNED CHARACTERS ANALYSIS ── */}
+                {results.ownedAdvice && results.ownedAdvice.length > 0 && (
+                  <div style={{ marginTop:32 }}>
+                    <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",textTransform:"uppercase",marginBottom:16 }}>◆ Your Roster — Investment Guide</div>
+                    <div style={{ fontSize:12,color:"#4060a0",marginBottom:16 }}>Your owned 5★ characters ranked by current meta tier. Focus upgrade resources on top-tier units first.</div>
+
+                    <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                      {results.ownedAdvice.map((char)=>{
+                        const el = ELEMENT_COLORS[char.element]||ELEMENT_COLORS.Physical;
+                        const imgSrc = getImg(char);
+                        const tierColors = { SS:"#ff3030", "SS+":"#ff7020", S:"#ffd020", "S-":"#60d060", A:"#50b0ff", B:"#9090a0" };
+                        const tierCol = tierColors[char.tier] || "#666";
+                        return (
+                          <div key={char.id} style={{ display:"flex",gap:16,alignItems:"center",background:"rgba(18,24,54,.85)",border:`1px solid rgba(60,80,160,.25)`,borderLeft:`3px solid ${tierCol}`,borderRadius:12,padding:"14px 18px",flexWrap:"wrap" }}>
+                            {/* Portrait */}
+                            <div style={{ width:52,height:52,borderRadius:10,overflow:"hidden",border:`1.5px solid ${el.glow}50`,flexShrink:0,background:`${el.bg}15` }}>
+                              {imgSrc&&!imgErrors["o_"+char.id]?<img src={imgSrc} alt={char.name} onError={()=>setImgErrors(p=>({...p,["o_"+char.id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>{PATH_ICONS[char.path]||"◈"}</div>}
+                            </div>
+                            {/* Info */}
+                            <div style={{ flex:1,minWidth:160 }}>
+                              <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap" }}>
+                                <span style={{ fontFamily:"Orbitron",fontSize:14,color:"#d0d8f8",fontWeight:600 }}>{char.name}</span>
+                                <span style={{ fontSize:10,color:tierCol,fontWeight:700,letterSpacing:2,background:`${tierCol}15`,border:`1px solid ${tierCol}40`,borderRadius:5,padding:"1px 7px" }}>Tier {char.tier}</span>
+                                <span style={{ fontSize:10,color:el.glow,background:`${el.bg}20`,borderRadius:5,padding:"1px 7px" }}>{char.element}</span>
+                                <span style={{ fontSize:10,color:"#6080a0",borderRadius:5,padding:"1px 7px",background:"rgba(40,50,100,.4)" }}>{char.role}</span>
+                              </div>
+                              <div style={{ fontSize:12,color:"#7080a0",lineHeight:1.5 }}>{char.note}</div>
+                              {char.synergyNames.length>0 && <div style={{ fontSize:11,color:"#5070908",marginTop:3 }}>✦ In your roster pairs well with: <span style={{color:"#7090c0"}}>{char.synergyNames.join(", ")}</span></div>}
+                            </div>
+                            {/* Tier badge */}
+                            <div style={{ flexShrink:0,width:44,height:44,borderRadius:"50%",border:`2px solid ${tierCol}`,display:"flex",alignItems:"center",justifyContent:"center",background:`${tierCol}10` }}>
+                              <span style={{ fontFamily:"Orbitron",fontSize:11,fontWeight:800,color:tierCol }}>{char.tier}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Roster role coverage */}
+                <div style={{ ...{background:"linear-gradient(135deg,rgba(20,25,60,.92),rgba(15,20,50,.92))",border:"1px solid rgba(80,100,200,.3)",borderRadius:16,padding:"22px 26px",backdropFilter:"blur(10px)"},marginTop:28 }}>
+                  <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",marginBottom:16,textTransform:"uppercase" }}>◆ Role Coverage</div>
+                  <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12 }}>
+                    {Object.entries(results.roles).map(([role,count])=>(
+                      <div key={role} style={{ padding:"10px 14px",background:count===0?"rgba(200,60,60,.1)":"rgba(60,200,80,.05)",border:`1px solid ${count===0?"rgba(200,60,60,.3)":"rgba(60,200,80,.2)"}`,borderRadius:10 }}>
+                        <div style={{ fontSize:11,color:"#6080a0",marginBottom:3 }}>{role}</div>
+                        <div style={{ fontFamily:"Orbitron",fontSize:19,color:count===0?"#ff8080":"#80c080" }}>{count}</div>
+                        <div style={{ fontSize:10,color:count===0?"#ff6060":"#60a060",marginTop:2 }}>{count===0?"⚠ MISSING":"✓ covered"}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ textAlign:"center",marginTop:22 }}>
+                  <button className="glow-btn" onClick={()=>setStep("setup")} style={{ background:"linear-gradient(135deg,rgba(40,50,120,.6),rgba(60,30,100,.6))",border:"1px solid rgba(80,100,200,.4)",borderRadius:10,padding:"11px 28px",color:"#8090d0",fontSize:12,letterSpacing:2,fontFamily:"Rajdhani" }}>← UPDATE ROSTER</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ──────────────── TIER LIST TAB ──────────────── */}
+        {tab === "tierlist" && (
+          <div>
+            <div style={{ ...panelStyle, marginBottom:24 }}>
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12 }}>
+                <div>
+                  <div style={{ fontSize:11,letterSpacing:4,color:"#6080c0",textTransform:"uppercase",marginBottom:4 }}>◆ Character Tier List</div>
+                  <div style={{ fontSize:13,color:"#5070a0" }}>Updated for v4.0 · March 2026 · Based on MoC, PF & Apocalyptic Shadow</div>
+                </div>
+                <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+                  {["All","DPS","Support","Healer","Tank","Sub-DPS"].map(f=>(
+                    <button key={f} className="filter-pill" onClick={()=>setTlMode(f)} style={{ background:tlMode===f?"rgba(100,120,255,.3)":"rgba(40,50,100,.3)",border:`1px solid ${tlMode===f?"rgba(100,120,255,.6)":"rgba(60,80,140,.3)"}`,borderRadius:20,padding:"5px 13px",fontSize:12,color:tlMode===f?"#c0d0ff":"#6080a0",fontFamily:"Rajdhani",letterSpacing:1 }}>{f}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {TIER_LIST.map(tier => {
+              const chars = tlMode==="All" ? tier.characters : tier.characters.filter(c=>c.role===tlMode);
+              if(chars.length===0) return null;
+              return (
+                <div key={tier.tier} className="tl-card" style={{ display:"flex",gap:0,marginBottom:12,borderRadius:14,overflow:"hidden",border:`1px solid ${tier.border}`,background:tier.bg,backdropFilter:"blur(8px)" }}>
+                  {/* Tier label */}
+                  <div style={{ width:70,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"16px 8px",borderRight:`1px solid ${tier.border}`,background:`${tier.color}10`,gap:6 }}>
+                    <div style={{ fontFamily:"Orbitron",fontSize:22,fontWeight:800,color:tier.color,textShadow:`0 0 20px ${tier.color}` }}>{tier.tier}</div>
+                    <div style={{ fontSize:9,color:tier.color,letterSpacing:1,textAlign:"center",lineHeight:1.3,opacity:.8 }}>{tier.label.split("—")[1]?.trim()||""}</div>
+                  </div>
+                  {/* Characters */}
+                  <div style={{ flex:1,display:"flex",flexWrap:"wrap",gap:10,padding:"14px 16px",alignItems:"flex-start" }}>
+                    {chars.map(char=>{
+                      const el=ELEMENT_COLORS[char.element]||ELEMENT_COLORS.Physical;
+                      const isInRoster=owned.includes(char.id);
+                      const imgSrc = char.customIcon && CUSTOM_ICONS[char.customIcon] ? CUSTOM_ICONS[char.customIcon] : char.image;
+                      return (
+                        <div key={char.id} className="tl-char" title={`${char.name} — ${char.note}`} style={{ width:70,textAlign:"center" }}>
+                          <div style={{ width:64,height:64,borderRadius:12,overflow:"hidden",border:`2px solid ${isInRoster?el.glow:el.bg+"60"}`,background:`linear-gradient(180deg,${el.bg}25,${el.bg}08)`,margin:"0 auto",position:"relative",boxShadow:isInRoster?`0 0 14px ${el.bg}80`:`0 0 6px ${el.bg}30` }}>
+                            {imgSrc&&!imgErrors["tl_"+char.id] ? (
+                              <img src={imgSrc} alt={char.name} onError={()=>setImgErrors(prev=>({...prev,["tl_"+char.id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+                            ) : (
+                              <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26}}>{PATH_ICONS[char.path]||"◈"}</div>
+                            )}
+                            {isInRoster && <div style={{ position:"absolute",bottom:2,right:2,width:14,height:14,borderRadius:"50%",background:el.glow,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:"#000" }}>✓</div>}
+                            {char.rarity===5 && <div style={{ position:"absolute",top:2,left:2,fontSize:8,color:"#ffd080",fontWeight:700,textShadow:"0 0 4px #000" }}>5★</div>}
+                          </div>
+                          <div style={{ marginTop:5,fontSize:9.5,color:"#b0c0d8",lineHeight:1.2,fontWeight:600 }}>{char.name}</div>
+                          <div style={{ fontSize:8,color:el.glow,marginTop:1,opacity:.85 }}>{char.element}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ marginTop:20,padding:"14px 20px",background:"rgba(20,28,60,.7)",border:"1px solid rgba(60,80,140,.3)",borderRadius:12,fontSize:12,color:"#5070a0",lineHeight:1.7 }}>
+              <span style={{color:"#7090c0",fontWeight:600}}>◆ Notes:</span> Characters marked with <span style={{color:"#80c0ff",fontWeight:600}}>✓</span> are in your roster. Ratings are at E0 with ideal setup. Source: Prydwen, Game8, Beebom, FRVR — v4.0 March 2026 consensus. Hover any character portrait for notes.
+            </div>
+          </div>
+        )}
+
+        <div style={{ textAlign:"center",marginTop:44,paddingTop:22,borderTop:"1px solid rgba(40,60,120,.3)",color:"#2a3050",fontSize:11,letterSpacing:2 }}>FAN-MADE TOOL · NOT AFFILIATED WITH HOYOVERSE · HONKAI: STAR RAIL v4.0</div>
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
 </html>
