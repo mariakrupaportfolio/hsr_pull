@@ -383,7 +383,7 @@ function App() {
   const fetchLiveTierList = async () => {
     setTlLoading(true); setTlError(null);
     try {
-      const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://game8.co/games/Honkai-Star-Rail/archives/409604");
+      const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://game8.co/games/Honkai-Star-Rail");
       const res = await fetch(proxyUrl);
       const data = await res.json();
       const html = data.contents || "";
@@ -1167,3 +1167,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
 </html>
+
