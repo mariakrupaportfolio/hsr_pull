@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -417,6 +418,94 @@ function App() {
   const [analyzing, setAnalyzing] = useState(false);
   const [hoveredChar, setHoveredChar] = useState(null);
   const [tlMode, setTlMode] = useState("All"); // tier list filter
+  const [liveData, setLiveData] = useState(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveError, setLiveError] = useState(null);
+  const [bannersToShow, setBannersToShow] = useState(UPCOMING_BANNERS);
+
+  const fetchLiveBanners = async () => {
+    setLiveLoading(true); setLiveError(null);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          messages: [{
+            role: "user",
+            content: `Search for the current and upcoming Honkai Star Rail banners in 2025-2026. 
+Find the active banner characters RIGHT NOW and the next 1-2 upcoming banners.
+Respond ONLY with valid JSON, no markdown, no extra text:
+{
+  "currentBanners": [
+    {
+      "character": "exact character name",
+      "tier": "SS or SS+ or S or S- or A or B",
+      "type": "Limited 5★ or Limited 5★ Rerun",
+      "element": "Fire|Ice|Wind|Lightning|Quantum|Imaginary|Physical",
+      "role": "DPS|Support|Healer|Tank|Sub-DPS",
+      "whyPull": "2-3 sentence pull reason",
+      "whySkip": "1-2 sentence skip reason",
+      "teamTip": "best team composition",
+      "eidolonNotes": ["E0 — note", "E1 — note", "E2 — note", "E6 — note"]
+    }
+  ],
+  "upcomingBanners": [
+    { "character": "name", "tier": "tier", "type": "type", "element": "element", "role": "role", "whyPull": "...", "whySkip": "...", "teamTip": "...", "eidolonNotes": ["E0 — note", "E1 — note", "E2 — note", "E6 — note"] }
+  ],
+  "fetchedAt": "current date"
+}`
+          }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content.map(b => b.type === "text" ? b.text : "").join("");
+      const clean = text.replace(/\`\`\`json|\`\`\`/g, "").trim();
+      const parsed = JSON.parse(clean);
+      
+      // Merge live data with existing character DB
+      const allBanners = [...(parsed.currentBanners||[]), ...(parsed.upcomingBanners||[])].map(b => {
+        const charName = b.character.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/__+/g,"_");
+        const knownChar = CHARACTERS.find(c => 
+          c.name.toLowerCase() === b.character.toLowerCase() ||
+          c.id === charName ||
+          c.name.toLowerCase().includes(b.character.toLowerCase().split(" ")[0])
+        );
+        return {
+          id: charName + "_live",
+          character: knownChar?.id || charName,
+          type: b.type,
+          tier: b.tier,
+          whyPull: b.whyPull,
+          whySkip: b.whySkip,
+          teamTip: b.teamTip,
+          eidolonNotes: b.eidolonNotes || [],
+          isLive: true,
+          liveCharData: !knownChar ? {
+            id: charName,
+            name: b.character,
+            element: b.element || "Physical",
+            path: "Unknown",
+            rarity: 5,
+            role: b.role || "DPS",
+            image: null,
+            customIcon: null,
+            desc: b.whyPull,
+            synergies: []
+          } : null
+        };
+      });
+      
+      setBannersToShow(allBanners.length > 0 ? allBanners : UPCOMING_BANNERS);
+      setLiveData(parsed);
+    } catch(e) {
+      setLiveError("Could not fetch live data: " + e.message);
+      setBannersToShow(UPCOMING_BANNERS);
+    }
+    setLiveLoading(false);
+  };
 
   // Helper: get image src for a character
   const getImg = (char) => {
@@ -497,6 +586,17 @@ function App() {
       lingsha: "https://api.hakush.in/hsr/UI/avatarshopicon/1319.webp",
       march7th_hunt: "https://api.hakush.in/hsr/UI/avatarshopicon/1001.webp",
       misha: "https://api.hakush.in/hsr/UI/avatarshopicon/1220.webp",
+      castorice: "https://api.hakush.in/hsr/UI/avatarshopicon/1402.webp",
+      tribbie: "https://api.hakush.in/hsr/UI/avatarshopicon/1401.webp",
+      hyacine: "https://api.hakush.in/hsr/UI/avatarshopicon/1403.webp",
+      aglaea: "https://api.hakush.in/hsr/UI/avatarshopicon/1405.webp",
+      huohuo: "https://api.hakush.in/hsr/UI/avatarshopicon/1217.webp",
+      bronya: "https://api.hakush.in/hsr/UI/avatarshopicon/1101.webp",
+      bailu: "https://api.hakush.in/hsr/UI/avatarshopicon/1204.webp",
+      phainon: "https://api.hakush.in/hsr/UI/avatarshopicon/1404.webp",
+      sunday: "https://api.hakush.in/hsr/UI/avatarshopicon/1313.webp",
+      cerydra: "https://api.hakush.in/hsr/UI/avatarshopicon/1406.webp",
+      the_herta: "https://api.hakush.in/hsr/UI/avatarshopicon/1400.webp",
     };
     return remoteFallbacks[char.customIcon] || remoteFallbacks[char.id] || null;
   };
@@ -524,9 +624,9 @@ function App() {
     const wn = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
 
     // ── Score upcoming banners ──────────────────────────────────────────────
-    const scored = UPCOMING_BANNERS.map(banner => {
-      const char = CHARACTERS.find(c => c.id === banner.character);
-      if (!char) return { ...banner, char, score: 0, verdict:"skip", reasons:[], pullAdvice:"", eidolonAdvice:"" };
+    const scored = bannersToShow.map(banner => {
+      const char = CHARACTERS.find(c => c.id === banner.character) || banner.liveCharData;
+      if (!char) return { ...banner, char: null, score: 0, verdict:"skip", reasons:[], pullAdvice:"", eidolonAdvice:"" };
       let score = 0;
       const alreadyOwned = ownedSet.has(char.id);
       const synergiesOwned = (char.synergies || []).filter(s => ownedSet.has(s));
@@ -777,6 +877,13 @@ const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
                 </div>
 
                 <div style={{ textAlign:"center",marginTop:28 }}>
+                  <div style={{ marginBottom:16, display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+                    <button className="glow-btn" onClick={fetchLiveBanners} disabled={liveLoading} style={{ background:"rgba(20,60,40,.5)", border:"1px solid rgba(60,180,100,.4)", borderRadius:10, padding:"9px 20px", fontSize:12, letterSpacing:2, color:liveLoading?"#406050":"#80d0a0", fontFamily:"Rajdhani" }}>
+                      {liveLoading ? "⟳ FETCHING..." : liveData ? "✓ LIVE DATA LOADED · REFRESH" : "⟳ FETCH LIVE BANNERS"}
+                    </button>
+                    {liveError && <div style={{fontSize:11,color:"#ff8060",alignSelf:"center"}}>{liveError}</div>}
+                    {liveData && <div style={{fontSize:11,color:"#60a080",alignSelf:"center"}}>Updated: {liveData.fetchedAt}</div>}
+                  </div>
                   <button className="glow-btn" onClick={analyze} disabled={!canAnalyze} style={{ background:canAnalyze?"linear-gradient(135deg,#4040c0 0%,#6020a0 50%,#8030c0 100%)":"rgba(40,50,80,.4)",border:canAnalyze?"1px solid rgba(120,80,255,.6)":"1px solid rgba(40,50,80,.4)",borderRadius:14,padding:"15px 44px",fontSize:16,letterSpacing:3,textTransform:"uppercase",color:canAnalyze?"#e0d0ff":"#304060",fontFamily:"Orbitron,monospace",fontWeight:600,boxShadow:canAnalyze?"0 0 36px rgba(100,60,200,.4)":"none",opacity:canAnalyze?1:.5 }}>◈ ANALYZE WARPS ◈</button>
                   {!canAnalyze && <div style={{ marginTop:10,color:"#304060",fontSize:12,letterSpacing:1 }}>Select characters you own or enter your wish count</div>}
                 </div>
@@ -885,15 +992,27 @@ const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
                       {/* Eidolon breakdown */}
                       {banner.eidolonNotes && banner.eidolonNotes.length > 0 && (
                         <div style={{ marginTop:16,padding:"12px 16px",background:"rgba(100,60,200,.07)",border:"1px solid rgba(120,60,220,.2)",borderRadius:10 }}>
-                          <div style={{ fontSize:10,letterSpacing:3,color:"#8060c0",marginBottom:8,textTransform:"uppercase" }}>Eidolon Value</div>
-                          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:6 }}>
-                            {banner.eidolonNotes.map((note,ni)=>(
-                              <div key={ni} style={{ fontSize:11,color:"#9090b8",display:"flex",gap:8,alignItems:"flex-start",padding:"4px 0" }}>
-                                <span style={{ color:ni<=1?"#c080ff":ni===2?"#9060d0":"#5040808",fontWeight:700,flexShrink:0,fontFamily:"Orbitron",fontSize:10 }}>E{ni}</span>
-                                <span style={{ color:ni===0?"#d0c0f8":ni<=2?"#a090d0":"#605080" }}>{note.split(" — ").slice(1).join(" — ") || note}</span>
+                          <div style={{ fontSize:10,letterSpacing:3,color:"#8060c0",marginBottom:8,textTransform:"uppercase" }}>Eidolon Value & Copies Needed</div>
+                          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:6 }}>
+                            {banner.eidolonNotes.map((note,ni)=>{
+                              const alreadyE = banner.alreadyOwned ? 1 : 0;
+                              const copiesNeeded = Math.max(0, (ni + alreadyE) - (banner.alreadyOwned ? 1 : 0));
+                              const wishesForCopies = copiesNeeded * (guaranteed ? 90 : 180);
+                              const worthIt = ni===0 || ni===1 ? "high" : ni===2 ? "medium" : "low";
+                              const worthColor = worthIt==="high"?"#c080ff":worthIt==="medium"?"#9060d0":"#504060";
+                              return (
+                              <div key={ni} style={{ fontSize:11,color:"#9090b8",display:"flex",gap:8,alignItems:"flex-start",padding:"6px 8px",background:"rgba(80,40,160,.08)",borderRadius:6,border:`1px solid ${worthColor}20` }}>
+                                <span style={{ color:worthColor,fontWeight:700,flexShrink:0,fontFamily:"Orbitron",fontSize:11,minWidth:22 }}>E{ni}</span>
+                                <div style={{flex:1}}>
+                                  <div style={{ color:ni===0?"#d0c0f8":ni<=2?"#a090d0":"#605080",marginBottom:2 }}>{note.split(" — ").slice(1).join(" — ") || note}</div>
+                                  {ni > 0 && <div style={{fontSize:10,color:"#6050a0"}}>
+                                    {copiesNeeded} extra {copiesNeeded===1?"copy":"copies"} · ~{copiesNeeded*(guaranteed?90:180)} wishes
+                                  </div>}
+                                </div>
                               </div>
-                            ))}
+                            )})}
                           </div>
+                          {banner.alreadyOwned && <div style={{marginTop:8,fontSize:11,color:"#7060a0"}}>You own E0 — each eidolon needs 1 additional copy (~{guaranteed?90:180} wishes on 50/50)</div>}
                         </div>
                       )}
                     </div>
@@ -994,7 +1113,7 @@ const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
                     {chars.map(char=>{
                       const el=ELEMENT_COLORS[char.element]||ELEMENT_COLORS.Physical;
                       const isInRoster=owned.includes(char.id);
-                      const imgSrc = char.customIcon && CUSTOM_ICONS[char.customIcon] ? CUSTOM_ICONS[char.customIcon] : char.image;
+                      const imgSrc = getImg(char);
                       return (
                         <div key={char.id} className="tl-char" title={`${char.name} — ${char.note}`} style={{ width:70,textAlign:"center" }}>
                           <div style={{ width:64,height:64,borderRadius:12,overflow:"hidden",border:`2px solid ${isInRoster?el.glow:el.bg+"60"}`,background:`linear-gradient(180deg,${el.bg}25,${el.bg}08)`,margin:"0 auto",position:"relative",boxShadow:isInRoster?`0 0 14px ${el.bg}80`:`0 0 6px ${el.bg}30` }}>
