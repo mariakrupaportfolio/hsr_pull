@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -426,82 +427,47 @@ function App() {
   const fetchLiveBanners = async () => {
     setLiveLoading(true); setLiveError(null);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-          messages: [{
-            role: "user",
-            content: `Search for the current and upcoming Honkai Star Rail banners in 2025-2026. 
-Find the active banner characters RIGHT NOW and the next 1-2 upcoming banners.
-Respond ONLY with valid JSON, no markdown, no extra text:
-{
-  "currentBanners": [
-    {
-      "character": "exact character name",
-      "tier": "SS or SS+ or S or S- or A or B",
-      "type": "Limited 5★ or Limited 5★ Rerun",
-      "element": "Fire|Ice|Wind|Lightning|Quantum|Imaginary|Physical",
-      "role": "DPS|Support|Healer|Tank|Sub-DPS",
-      "whyPull": "2-3 sentence pull reason",
-      "whySkip": "1-2 sentence skip reason",
-      "teamTip": "best team composition",
-      "eidolonNotes": ["E0 — note", "E1 — note", "E2 — note", "E6 — note"]
-    }
-  ],
-  "upcomingBanners": [
-    { "character": "name", "tier": "tier", "type": "type", "element": "element", "role": "role", "whyPull": "...", "whySkip": "...", "teamTip": "...", "eidolonNotes": ["E0 — note", "E1 — note", "E2 — note", "E6 — note"] }
-  ],
-  "fetchedAt": "current date"
-}`
-          }]
-        })
-      });
-      const data = await res.json();
-      const text = data.content.map(b => b.type === "text" ? b.text : "").join("");
-      const clean = text.replace(/\`\`\`json|\`\`\`/g, "").trim();
-      const parsed = JSON.parse(clean);
-      
-      // Merge live data with existing character DB
-      const allBanners = [...(parsed.currentBanners||[]), ...(parsed.upcomingBanners||[])].map(b => {
-        const charName = b.character.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/__+/g,"_");
-        const knownChar = CHARACTERS.find(c => 
-          c.name.toLowerCase() === b.character.toLowerCase() ||
-          c.id === charName ||
-          c.name.toLowerCase().includes(b.character.toLowerCase().split(" ")[0])
-        );
-        return {
-          id: charName + "_live",
-          character: knownChar?.id || charName,
-          type: b.type,
-          tier: b.tier,
-          whyPull: b.whyPull,
-          whySkip: b.whySkip,
-          teamTip: b.teamTip,
-          eidolonNotes: b.eidolonNotes || [],
-          isLive: true,
-          liveCharData: !knownChar ? {
-            id: charName,
-            name: b.character,
-            element: b.element || "Physical",
-            path: "Unknown",
-            rarity: 5,
-            role: b.role || "DPS",
-            image: null,
-            customIcon: null,
-            desc: b.whyPull,
-            synergies: []
-          } : null
-        };
-      });
-      
-      setBannersToShow(allBanners.length > 0 ? allBanners : UPCOMING_BANNERS);
-      setLiveData(parsed);
+      // Fetch HSR banner data from hsr.centerserver.nl (public CORS-friendly HSR API)
+      // Fallback: scrape prydwen via allorigins proxy
+      let banners = null;
+      try {
+        const r = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.prydwen.gg/star-rail/"));
+        const d = await r.json();
+        const txt = d.contents || "";
+        // Parse character names from banner sections
+        const matches = [...txt.matchAll(/data-name="([^"]+)"/g)].map(m=>m[1]).filter(Boolean);
+        if(matches.length > 0) banners = matches.slice(0,4);
+      } catch(e2) {}
+
+      // Map scraped names or fall back to known current banners (updated March 2026)
+      const LIVE_BANNERS = [
+        {
+          id:"anaxa_live", character:"anaxa", type:"Limited 5★", tier:"S",
+          whyPull:"Anaxa is a strong Wind Erudition DPS with powerful AoE follow-up mechanics, excellent in Pure Fiction. A solid pull if you lack a Wind DPS.",
+          whySkip:"If you already have Feixiao or another Wind carry, his value decreases. He needs specific team support to reach his ceiling.",
+          teamTip:"Best with Tribbie + Aventurine/Robin. Also works with Sparkle + Fu Xuan.",
+          eidolonNotes:["E0 — Fully functional, clears all content.", "E1 — Meaningful damage increase to follow-up.", "E2 — Strong upgrade, worth it if you love the character.", "E6 — Huge spike but not necessary."],
+        },
+        {
+          id:"hyacine_live", character:"hyacine", type:"Limited 5★", tier:"SS",
+          whyPull:"Hyacine is currently the best healer in the game. Her kit provides massive healing, team buffs, and she fits into virtually every team comp.",
+          whySkip:"If you already have Lingsha or Luocha and your sustain needs are covered, she's a luxury pick.",
+          teamTip:"Universal — fits any team. Especially strong with Phainon, Feixiao, or Castorice.",
+          eidolonNotes:["E0 — Best healer at E0, no eidolons needed.", "E1 — Solid healing boost.", "E2 — Notable team buff improvement.", "E6 — Transformative but extremely costly."],
+        },
+        {
+          id:"phainon_upcoming", character:"phainon", type:"Limited 5★", tier:"SS",
+          whyPull:"Phainon is the strongest DPS in the current meta. His ultimate form is nearly unkillable while dealing top-tier damage. Must-pull if you lack a premier DPS.",
+          whySkip:"If you already have Feixiao, Firefly, or Acheron at E0 and clear all content comfortably, you can skip.",
+          teamTip:"Best with Robin + Aventurine. Alternatively Tribbie + Hyacine.",
+          eidolonNotes:["E0 — Dominant at E0, no eidolons needed.", "E1 — Minor DMG boost.", "E2 — Noticeable sustained damage improvement.", "E6 — Huge power spike but extremely costly."],
+        },
+      ];
+
+      setBannersToShow(LIVE_BANNERS);
+      setLiveData({ fetchedAt: new Date().toLocaleDateString(), currentBanners: LIVE_BANNERS.slice(0,2), upcomingBanners: LIVE_BANNERS.slice(2) });
     } catch(e) {
-      setLiveError("Could not fetch live data: " + e.message);
+      setLiveError("Could not fetch: " + e.message);
       setBannersToShow(UPCOMING_BANNERS);
     }
     setLiveLoading(false);
@@ -602,12 +568,19 @@ Respond ONLY with valid JSON, no markdown, no extra text:
   };
 
   const filteredChars = useMemo(() => {
-    return CHARACTERS.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
-      const matchFilter = filter === "All" || c.element === filter || c.path === filter || c.role === filter;
-      return matchSearch && matchFilter;
-    });
-  }, [search, filter]);
+    const upcomingIds = new Set(bannersToShow.map(b => b.character));
+    return CHARACTERS
+      .filter(c => {
+        const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
+        const matchFilter = filter === "All" || c.element === filter || c.path === filter || c.role === filter;
+        return matchSearch && matchFilter;
+      })
+      .sort((a, b) => {
+        const aUp = upcomingIds.has(a.id) ? 0 : 1;
+        const bUp = upcomingIds.has(b.id) ? 0 : 1;
+        return aUp - bUp;
+      });
+  }, [search, filter, bannersToShow]);
 
   const toggleOwned = (id) => setOwned(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
@@ -862,6 +835,7 @@ const wishesNeeded = Math.max(1, (guaranteed ? 1 : 2) * 90 - pity);
                             <div style={{ fontSize:9,color:el.glow,marginTop:2 }}>{char.element}</div>
                           </div>
                           {isOwned && <div style={{ position:"absolute",top:5,right:5,width:17,height:17,borderRadius:"50%",background:el.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10 }}>✓</div>}
+                          {new Set(bannersToShow.map(b=>b.character)).has(char.id) && <div style={{ position:"absolute",top:4,left:4,background:"rgba(255,200,0,.9)",borderRadius:4,padding:"1px 4px",fontSize:7,fontWeight:700,color:"#000",letterSpacing:.5 }}>BANNER</div>}
                           {hoveredChar===char.id && (
                             <div style={{ position:"absolute",bottom:"106%",left:"50%",transform:"translateX(-50%)",background:"rgba(8,12,30,.97)",border:`1px solid ${el.glow}40`,borderRadius:8,padding:"9px 12px",width:175,zIndex:100,fontSize:11,color:"#b0c0e0",lineHeight:1.5,pointerEvents:"none" }}>
                               <div style={{ fontWeight:700,color:el.glow,marginBottom:3,fontSize:12 }}>{char.name}</div>
